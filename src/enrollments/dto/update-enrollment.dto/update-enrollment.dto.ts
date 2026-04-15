@@ -1,1 +1,3 @@
-export class UpdateEnrollmentDto {}
+export class UpdateEnrollmentDto {
+  status?: string;
+}
