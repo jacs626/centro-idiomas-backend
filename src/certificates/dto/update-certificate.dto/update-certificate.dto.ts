@@ -1,1 +1,4 @@
-export class UpdateCertificateDto {}
+import { PartialType } from '@nestjs/mapped-types';
+import { CreateCertificateDto } from '../create-certificate.dto/create-certificate.dto';
+
+export class UpdateCertificateDto extends PartialType(CreateCertificateDto) {}

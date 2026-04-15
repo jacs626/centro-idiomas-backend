@@ -52,4 +52,8 @@ export class ProgressService {
   findByCourse(courseId: number) {
     return this.progresses.filter((p) => p.courseId === courseId);
   }
+
+  findByUserAndCourse(userId: number, courseId: number) {
+    return this.progresses.find((p) => p.userId === userId && p.courseId === courseId);
+  }
 }
