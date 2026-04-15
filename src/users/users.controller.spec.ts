@@ -7,7 +7,12 @@ describe('UsersController', () => {
   let controller: UsersController;
   let service: UsersService;
 
-  const mockUser = { id: 1, name: 'John', email: 'john@example.com', role: 'alumno' };
+  const mockUser = {
+    id: 1,
+    name: 'John',
+    email: 'john@example.com',
+    role: 'alumno' as const,
+  };
 
   const mockUsersService = {
     findAll: jest.fn(),
@@ -20,9 +25,7 @@ describe('UsersController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [UsersController],
-      providers: [
-        { provide: UsersService, useValue: mockUsersService },
-      ],
+      providers: [{ provide: UsersService, useValue: mockUsersService }],
     }).compile();
 
     controller = module.get<UsersController>(UsersController);
@@ -49,16 +52,32 @@ describe('UsersController', () => {
     });
 
     it('should throw NotFoundException when not found', async () => {
-      mockUsersService.findById = jest.fn().mockRejectedValue(new NotFoundException());
-      await expect(controller.findOne('999')).rejects.toThrow(NotFoundException);
+      mockUsersService.findById = jest
+        .fn()
+        .mockRejectedValue(new NotFoundException());
+      await expect(controller.findOne('999')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
   describe('create', () => {
     it('should create a user', () => {
-      const dto = { name: 'Jane', email: 'jane@example.com', password: 'password123', role: 'alumno' };
-      mockUsersService.create.mockResolvedValue({ id: 2, name: 'Jane', email: 'jane@example.com', role: 'alumno' });
-      expect(controller.create(dto)).resolves.toEqual(expect.objectContaining({ name: 'Jane' }));
+      const dto = {
+        name: 'Jane',
+        email: 'jane@example.com',
+        password: 'password123',
+        role: 'alumno' as const,
+      };
+      mockUsersService.create.mockResolvedValue({
+        id: 2,
+        name: 'Jane',
+        email: 'jane@example.com',
+        role: 'alumno' as const,
+      });
+      expect(controller.create(dto)).resolves.toEqual(
+        expect.objectContaining({ name: 'Jane' }),
+      );
       expect(mockUsersService.create).toHaveBeenCalledWith(dto);
     });
   });
@@ -72,8 +91,12 @@ describe('UsersController', () => {
     });
 
     it('should throw NotFoundException when not found', async () => {
-      mockUsersService.update = jest.fn().mockRejectedValue(new NotFoundException());
-      await expect(controller.update('999', {})).rejects.toThrow(NotFoundException);
+      mockUsersService.update = jest
+        .fn()
+        .mockRejectedValue(new NotFoundException());
+      await expect(controller.update('999', {})).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -85,7 +108,9 @@ describe('UsersController', () => {
     });
 
     it('should throw NotFoundException when not found', async () => {
-      mockUsersService.remove = jest.fn().mockRejectedValue(new NotFoundException());
+      mockUsersService.remove = jest
+        .fn()
+        .mockRejectedValue(new NotFoundException());
       await expect(controller.remove('999')).rejects.toThrow(NotFoundException);
     });
   });

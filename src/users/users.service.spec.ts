@@ -15,7 +15,12 @@ describe('UsersService', () => {
   });
 
   describe('CRUD Operations', () => {
-    const dto = { name: 'John', email: 'john@example.com', password: 'password123', role: 'alumno' };
+    const dto = {
+      name: 'John',
+      email: 'john@example.com',
+      password: 'password123',
+      role: 'alumno' as const,
+    };
 
     describe('create', () => {
       it('should create a user with hashed password', async () => {
@@ -56,7 +61,9 @@ describe('UsersService', () => {
       });
 
       it('should throw NotFoundException for non-existent user', () => {
-        expect(() => service.update(999, { name: 'Test' })).toThrow(NotFoundException);
+        expect(() => service.update(999, { name: 'Test' })).toThrow(
+          NotFoundException,
+        );
       });
     });
 
