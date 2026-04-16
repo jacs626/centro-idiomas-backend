@@ -1,55 +1,96 @@
 import { Injectable } from '@nestjs/common';
-import { GetReportDto } from './dto/get-report.dto.ts/get-report.dto';
+import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class ReportsService {
-  getReport(dto: GetReportDto) {
-    switch (dto.type) {
-      case 'retention':
-        return this.getRetention(dto);
+  constructor(private prisma: PrismaService) {}
+  async getGroupRetention(groupId: number) {
+    const total = await this.prisma.enrollment.count({
+      where: { groupId },
+    });
 
-      case 'progress':
-        return this.getProgress(dto);
+    const active = await this.prisma.enrollment.count({
+      where: {
+        groupId,
+        status: 'active',
+      },
+    });
 
-      case 'payments':
-        return this.getPayments(dto);
+    const completed = await this.prisma.enrollment.count({
+      where: {
+        groupId,
+        status: 'completed',
+      },
+    });
 
-      case 'attendance':
-        return this.getAttendance(dto);
+    const dropped = await this.prisma.enrollment.count({
+      where: {
+        groupId,
+        status: 'dropped',
+      },
+    });
 
-      default:
-        return { message: 'Invalid report type' };
+    const retained = active + completed;
+
+    return {
+      groupId,
+      total,
+      active,
+      completed,
+      dropped,
+      retention: total ? (retained / total) * 100 : 0,
+    };
+  }
+
+  async getGlobalRetention() {
+    const total = await this.prisma.enrollment.count();
+
+    const active = await this.prisma.enrollment.count({
+      where: { status: 'active' },
+    });
+
+    const completed = await this.prisma.enrollment.count({
+      where: { status: 'completed' },
+    });
+
+    const dropped = await this.prisma.enrollment.count({
+      where: { status: 'dropped' },
+    });
+
+    const retained = active + completed;
+
+    return {
+      total,
+      active,
+      completed,
+      dropped,
+      retention: total ? (retained / total) * 100 : 0,
+    };
+  }
+
+  async getRetentionByCourse(courseId: number) {
+    const groups = await this.prisma.group.findMany({
+      where: { courseId },
+      include: {
+        enrollments: true,
+      },
+    });
+
+    let total = 0;
+    let retained = 0;
+
+    for (const group of groups) {
+      total += group.enrollments.length;
+
+      retained += group.enrollments.filter(
+        (e) => e.status === 'active' || e.status === 'completed',
+      ).length;
     }
-  }
 
-  private getRetention(dto: GetReportDto) {
     return {
-      type: 'retention',
-      groupId: dto.groupId,
-      retentionRate: 85, // mock ahora
-    };
-  }
-
-  private getProgress(dto: GetReportDto) {
-    return {
-      type: 'progress',
-      courseId: dto.courseId,
-      averageProgress: 72,
-    };
-  }
-
-  private getPayments(dto: GetReportDto) {
-    return {
-      type: 'payments',
-      status: 'summary',
-      total: 1200,
-    };
-  }
-
-  private getAttendance(dto: GetReportDto) {
-    return {
-      type: 'attendance',
-      attendanceRate: 90,
+      courseId,
+      total,
+      retention: total ? (retained / total) * 100 : 0,
     };
   }
 }

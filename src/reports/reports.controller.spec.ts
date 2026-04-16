@@ -1,14 +1,15 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ReportsController } from './reports.controller';
 import { ReportsService } from './reports.service';
-import { ReportType } from './dto/get-report.dto.ts/get-report.dto';
 
 describe('ReportsController', () => {
   let controller: ReportsController;
   let service: ReportsService;
 
   const mockReportsService = {
-    getReport: jest.fn(),
+    getGroupRetention: jest.fn(),
+    getGlobalRetention: jest.fn(),
+    getRetentionByCourse: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -25,30 +26,56 @@ describe('ReportsController', () => {
     jest.clearAllMocks();
   });
 
-  describe('getReport', () => {
-    it('should call service.getReport with dto', () => {
-      const dto = { type: ReportType.RETENTION, groupId: 1 };
-      mockReportsService.getReport.mockReturnValue({ type: 'retention', groupId: 1, retentionRate: 85 });
-      expect(controller.getReport(dto)).toEqual({ type: 'retention', groupId: 1, retentionRate: 85 });
-      expect(mockReportsService.getReport).toHaveBeenCalledWith(dto);
-    });
+  describe('getRetention', () => {
+    it('should return group retention data', async () => {
+      const mockRetention = {
+        groupId: 1,
+        total: 10,
+        active: 7,
+        completed: 2,
+        dropped: 1,
+        retention: 90,
+      };
+      mockReportsService.getGroupRetention.mockResolvedValue(mockRetention);
 
-    it('should return progress report', () => {
-      const dto = { type: ReportType.PROGRESS, courseId: 1 };
-      mockReportsService.getReport.mockReturnValue({ type: 'progress', courseId: 1, averageProgress: 72 });
-      expect(controller.getReport(dto)).toEqual({ type: 'progress', courseId: 1, averageProgress: 72 });
-    });
+      const result = await controller.getRetention(1);
 
-    it('should return payments report', () => {
-      const dto = { type: ReportType.PAYMENTS };
-      mockReportsService.getReport.mockReturnValue({ type: 'payments', status: 'summary', total: 1200 });
-      expect(controller.getReport(dto)).toEqual({ type: 'payments', status: 'summary', total: 1200 });
+      expect(result).toEqual(mockRetention);
+      expect(mockReportsService.getGroupRetention).toHaveBeenCalledWith(1);
     });
+  });
 
-    it('should return attendance report', () => {
-      const dto = { type: ReportType.ATTENDANCE };
-      mockReportsService.getReport.mockReturnValue({ type: 'attendance', attendanceRate: 90 });
-      expect(controller.getReport(dto)).toEqual({ type: 'attendance', attendanceRate: 90 });
+  describe('getGlobal', () => {
+    it('should return global retention data', async () => {
+      const mockRetention = {
+        total: 100,
+        active: 70,
+        completed: 20,
+        dropped: 10,
+        retention: 90,
+      };
+      mockReportsService.getGlobalRetention.mockResolvedValue(mockRetention);
+
+      const result = await controller.getGlobal();
+
+      expect(result).toEqual(mockRetention);
+      expect(mockReportsService.getGlobalRetention).toHaveBeenCalled();
+    });
+  });
+
+  describe('getCourseRetention', () => {
+    it('should return course retention data', async () => {
+      const mockRetention = {
+        courseId: 1,
+        total: 50,
+        retention: 80,
+      };
+      mockReportsService.getRetentionByCourse.mockResolvedValue(mockRetention);
+
+      const result = await controller.getCourseRetention(1);
+
+      expect(result).toEqual(mockRetention);
+      expect(mockReportsService.getRetentionByCourse).toHaveBeenCalledWith(1);
     });
   });
 });

@@ -1,13 +1,22 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { Controller, Get, Param, ParseIntPipe } from '@nestjs/common';
 import { ReportsService } from './reports.service';
-import { GetReportDto } from './dto/get-report.dto.ts/get-report.dto';
 
 @Controller('reports')
 export class ReportsController {
   constructor(private readonly service: ReportsService) {}
 
-  @Get()
-  getReport(@Query() dto: GetReportDto) {
-    return this.service.getReport(dto);
+  @Get('retention/group/:id')
+  getRetention(@Param('id', ParseIntPipe) id: number) {
+    return this.service.getGroupRetention(id);
+  }
+
+  @Get('retention/global')
+  getGlobal() {
+    return this.service.getGlobalRetention();
+  }
+
+  @Get('retention/course/:id')
+  getCourseRetention(@Param('id', ParseIntPipe) id: number) {
+    return this.service.getRetentionByCourse(id);
   }
 }
