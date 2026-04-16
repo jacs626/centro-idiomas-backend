@@ -1,98 +1,137 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { PaymentsService } from './payments.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { NotFoundException } from '@nestjs/common';
-import { CreatePaymentDto } from './dto/create-payment.dto/create-payment.dto';
 
 describe('PaymentsService', () => {
   let service: PaymentsService;
+  let prisma: PrismaService;
+
+  const mockPrisma = {
+    payment: {
+      create: jest.fn(),
+      update: jest.fn(),
+      findMany: jest.fn(),
+      updateMany: jest.fn(),
+    },
+    enrollment: {
+      findUnique: jest.fn(),
+    },
+  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [PaymentsService],
+      providers: [
+        PaymentsService,
+        { provide: PrismaService, useValue: mockPrisma },
+      ],
     }).compile();
 
     service = module.get<PaymentsService>(PaymentsService);
+    prisma = module.get<PrismaService>(PrismaService);
   });
 
-  describe('CRUD Operations', () => {
-    const dto: CreatePaymentDto = {
-      enrollmentId: 1,
-      amount: 100,
-      type: 'matricula',
-      status: 'pending',
-      dueDate: '2024-01-15',
-    };
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
 
-    describe('create', () => {
-      it('should create a payment', () => {
-        const result = service.create(dto);
-        expect(result).toHaveProperty('id');
-        expect(result.enrollmentId).toBe(dto.enrollmentId);
-        expect(result.amount).toBe(dto.amount);
-      });
+  describe('create', () => {
+    it('should create a payment', async () => {
+      const dto = {
+        enrollmentId: 1,
+        amount: 100,
+        type: 'matricula' as const,
+        status: 'pending' as const,
+        dueDate: '2024-01-01',
+      };
+      const mockPayment = {
+        id: 1,
+        ...dto,
+        dueDate: new Date('2024-01-01'),
+        paidAt: null,
+      };
+
+      mockPrisma.enrollment.findUnique.mockResolvedValue({ id: 1 });
+      mockPrisma.payment.create.mockResolvedValue(mockPayment);
+
+      const result = await service.create(dto);
+
+      expect(result).toEqual(mockPayment);
     });
 
-    describe('findAll', () => {
-      it('should return all payments', () => {
-        service.create(dto);
-        const payments = service.findAll();
-        expect(payments).toHaveLength(1);
-      });
-    });
+    it('should throw NotFoundException when enrollment not found', async () => {
+      const dto = {
+        enrollmentId: 999,
+        amount: 100,
+        type: 'matricula' as const,
+        status: 'pending' as const,
+        dueDate: '2024-01-01',
+      };
 
-    describe('findByEnrollment', () => {
-      it('should return payments by enrollment', () => {
-        service.create(dto);
-        service.create({
+      mockPrisma.enrollment.findUnique.mockResolvedValue(null);
+
+      await expect(service.create(dto)).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('markAsPaid', () => {
+    it('should mark payment as paid', async () => {
+      const mockPayment = {
+        id: 1,
+        enrollmentId: 1,
+        amount: 100,
+        status: 'paid',
+        paidAt: new Date(),
+      };
+
+      mockPrisma.payment.update.mockResolvedValue(mockPayment);
+
+      const result = await service.markAsPaid(1);
+
+      expect(result.status).toBe('paid');
+      expect(result.paidAt).toBeInstanceOf(Date);
+    });
+  });
+
+  describe('findByEnrollment', () => {
+    it('should return payments by enrollment', async () => {
+      const mockPayments = [
+        { id: 1, enrollmentId: 1, amount: 100, status: 'pending' },
+      ];
+      mockPrisma.payment.findMany.mockResolvedValue(mockPayments);
+
+      const result = await service.findByEnrollment(1);
+
+      expect(result).toEqual(mockPayments);
+    });
+  });
+
+  describe('findByGroup', () => {
+    it('should return payments by group', async () => {
+      const mockPayments = [
+        {
+          id: 1,
           enrollmentId: 1,
-          amount: 50,
-          type: 'cuota',
+          amount: 100,
           status: 'pending',
-          dueDate: '2024-02-01',
-        });
-        const payments = service.findByEnrollment(1);
-        expect(payments).toHaveLength(2);
-      });
+          enrollment: { user: { id: 1, name: 'John' } },
+        },
+      ];
+      mockPrisma.payment.findMany.mockResolvedValue(mockPayments);
 
-      it('should return empty array when no payments', () => {
-        const payments = service.findByEnrollment(999);
-        expect(payments).toHaveLength(0);
-      });
+      const result = await service.findByGroup(1);
+
+      expect(result).toEqual(mockPayments);
     });
+  });
 
-    describe('findByStatus', () => {
-      it('should return payments by status', () => {
-        service.create(dto);
-        const payments = service.findByStatus('pending');
-        expect(payments).toHaveLength(1);
-      });
-    });
+  describe('markLatePayments', () => {
+    it('should mark late payments', async () => {
+      mockPrisma.payment.updateMany.mockResolvedValue({ count: 5 });
 
-    describe('update', () => {
-      it('should update a payment', () => {
-        const created = service.create(dto);
-        const updated = service.update(created.id, { status: 'paid' });
-        expect(updated.status).toBe('paid');
-      });
+      const result = await service.markLatePayments();
 
-      it('should throw NotFoundException for non-existent', () => {
-        expect(() => service.update(999, { status: 'paid' })).toThrow(
-          NotFoundException,
-        );
-      });
-    });
-
-    describe('remove', () => {
-      it('should remove a payment', () => {
-        const created = service.create(dto);
-        const removed = service.remove(created.id);
-        expect(removed.id).toBe(created.id);
-        expect(service.findAll()).toHaveLength(0);
-      });
-
-      it('should throw NotFoundException for non-existent', () => {
-        expect(() => service.remove(999)).toThrow(NotFoundException);
-      });
+      expect(result.count).toBe(5);
     });
   });
 });

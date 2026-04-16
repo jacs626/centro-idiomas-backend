@@ -8,22 +8,21 @@ describe('PaymentsController', () => {
   let controller: PaymentsController;
   let service: PaymentsService;
 
-  const mockPayment: CreatePaymentDto & { id: number } = {
+  const mockPayment = {
     id: 1,
     enrollmentId: 1,
     amount: 100,
     type: 'matricula',
     status: 'pending',
-    dueDate: '2024-01-01',
+    dueDate: new Date('2024-01-01'),
+    paidAt: null,
   };
 
   const mockPaymentsService = {
-    findAll: jest.fn(),
-    findByEnrollment: jest.fn(),
-    findByStatus: jest.fn(),
     create: jest.fn(),
-    update: jest.fn(),
-    remove: jest.fn(),
+    markAsPaid: jest.fn(),
+    findByEnrollment: jest.fn(),
+    findByGroup: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -40,30 +39,8 @@ describe('PaymentsController', () => {
     jest.clearAllMocks();
   });
 
-  describe('findAll', () => {
-    it('should return all payments', () => {
-      mockPaymentsService.findAll.mockReturnValue([mockPayment]);
-      expect(controller.findAll()).toEqual([mockPayment]);
-    });
-  });
-
-  describe('findByEnrollment', () => {
-    it('should return payments by enrollment', () => {
-      mockPaymentsService.findByEnrollment.mockReturnValue([mockPayment]);
-      expect(controller.findByEnrollment('1')).toEqual([mockPayment]);
-      expect(mockPaymentsService.findByEnrollment).toHaveBeenCalledWith(1);
-    });
-  });
-
-  describe('findByStatus', () => {
-    it('should return payments by status', () => {
-      mockPaymentsService.findByStatus.mockReturnValue([mockPayment]);
-      expect(controller.findByStatus('pending')).toEqual([mockPayment]);
-    });
-  });
-
   describe('create', () => {
-    it('should create a payment', () => {
+    it('should create a payment', async () => {
       const dto: CreatePaymentDto = {
         enrollmentId: 1,
         amount: 100,
@@ -71,39 +48,60 @@ describe('PaymentsController', () => {
         status: 'pending',
         dueDate: '2024-01-01',
       };
-      mockPaymentsService.create.mockReturnValue(mockPayment);
-      expect(controller.create(dto)).toEqual(mockPayment);
+      mockPaymentsService.create.mockResolvedValue(mockPayment);
+
+      const result = await controller.create(dto);
+
+      expect(result).toEqual(mockPayment);
+      expect(mockPaymentsService.create).toHaveBeenCalledWith(dto);
     });
   });
 
-  describe('update', () => {
-    it('should update a payment', () => {
-      const dto = { status: 'paid' as const };
-      mockPaymentsService.update.mockReturnValue({ ...mockPayment, ...dto });
-      expect(controller.update('1', dto)).toEqual({ ...mockPayment, ...dto });
+  describe('markAsPaid', () => {
+    it('should mark payment as paid', async () => {
+      const paidPayment = {
+        ...mockPayment,
+        status: 'paid',
+        paidAt: new Date(),
+      };
+      mockPaymentsService.markAsPaid.mockResolvedValue(paidPayment);
+
+      const result = await controller.markAsPaid(1);
+
+      expect(result.status).toBe('paid');
+      expect(mockPaymentsService.markAsPaid).toHaveBeenCalledWith(1);
     });
 
     it('should throw NotFoundException when not found', async () => {
-      mockPaymentsService.update = jest
-        .fn()
-        .mockRejectedValue(new NotFoundException());
-      await expect(
-        controller.update('999', { status: 'paid' }),
-      ).rejects.toThrow(NotFoundException);
+      mockPaymentsService.markAsPaid.mockRejectedValue(
+        new NotFoundException('Payment no encontrado'),
+      );
+
+      await expect(controller.markAsPaid(999)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
-  describe('remove', () => {
-    it('should remove a payment', () => {
-      mockPaymentsService.remove.mockReturnValue(mockPayment);
-      expect(controller.remove('1')).toEqual(mockPayment);
-    });
+  describe('findByEnrollment', () => {
+    it('should return payments by enrollment', async () => {
+      mockPaymentsService.findByEnrollment.mockResolvedValue([mockPayment]);
 
-    it('should throw NotFoundException when not found', async () => {
-      mockPaymentsService.remove = jest
-        .fn()
-        .mockRejectedValue(new NotFoundException());
-      await expect(controller.remove('999')).rejects.toThrow(NotFoundException);
+      const result = await controller.findByEnrollment(1);
+
+      expect(result).toEqual([mockPayment]);
+      expect(mockPaymentsService.findByEnrollment).toHaveBeenCalledWith(1);
+    });
+  });
+
+  describe('findByGroup', () => {
+    it('should return payments by group', async () => {
+      mockPaymentsService.findByGroup.mockResolvedValue([mockPayment]);
+
+      const result = await controller.findByGroup(1);
+
+      expect(result).toEqual([mockPayment]);
+      expect(mockPaymentsService.findByGroup).toHaveBeenCalledWith(1);
     });
   });
 });

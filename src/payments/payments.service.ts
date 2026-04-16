@@ -1,61 +1,80 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
 import { CreatePaymentDto } from './dto/create-payment.dto/create-payment.dto';
-import { UpdatePaymentDto } from './dto/update-payment.dto/update-payment.dto';
-
-type Payment = {
-  id: number;
-  enrollmentId: number;
-  amount: number;
-  type: 'matricula' | 'cuota';
-  status: 'pending' | 'paid' | 'late';
-  dueDate: Date | string;
-  paidAt?: Date | string;
-};
 
 @Injectable()
 export class PaymentsService {
-  private payments: Payment[] = [];
+  constructor(private prisma: PrismaService) {}
 
-  findAll() {
-    return this.payments;
-  }
+  async create(dto: CreatePaymentDto) {
+    const enrollment = await this.prisma.enrollment.findUnique({
+      where: { id: dto.enrollmentId },
+    });
 
-  create(dto: CreatePaymentDto) {
-    const newPayment: Payment = {
-      id: Date.now(),
-      enrollmentId: dto.enrollmentId,
-      amount: dto.amount,
-      type: dto.type,
-      status: dto.status,
-      dueDate: new Date(dto.dueDate),
-      paidAt: dto.paidAt ? new Date(dto.paidAt) : undefined,
-    };
-    this.payments.push(newPayment);
-    return newPayment;
-  }
-
-  update(id: number, dto: UpdatePaymentDto) {
-    const index = this.payments.findIndex((p) => p.id === id);
-    if (index === -1) {
-      throw new NotFoundException(`Payment with id ${id} not found`);
+    if (!enrollment) {
+      throw new NotFoundException('Enrollment no existe');
     }
-    this.payments[index] = { ...this.payments[index], ...dto };
-    return this.payments[index];
+
+    return this.prisma.payment.create({
+      data: {
+        enrollmentId: dto.enrollmentId,
+        amount: dto.amount,
+        type: dto.type,
+        status: dto.status,
+        dueDate: new Date(dto.dueDate),
+        paidAt: dto.paidAt ? new Date(dto.paidAt) : null,
+      },
+    });
   }
 
-  remove(id: number) {
-    const index = this.payments.findIndex((p) => p.id === id);
-    if (index === -1) {
-      throw new NotFoundException(`Payment with id ${id} not found`);
-    }
-    return this.payments.splice(index, 1)[0];
+  async markAsPaid(id: number) {
+    return this.prisma.payment.update({
+      where: { id },
+      data: {
+        status: 'paid',
+        paidAt: new Date(),
+      },
+    });
   }
 
-  findByEnrollment(enrollmentId: number) {
-    return this.payments.filter((p) => p.enrollmentId === enrollmentId);
+  async findByEnrollment(enrollmentId: number) {
+    return this.prisma.payment.findMany({
+      where: { enrollmentId },
+      orderBy: { dueDate: 'asc' },
+    });
   }
 
-  findByStatus(status: 'pending' | 'paid' | 'late') {
-    return this.payments.filter((p) => p.status === status);
+  async findByGroup(groupId: number) {
+    return this.prisma.payment.findMany({
+      where: {
+        enrollment: {
+          groupId,
+        },
+      },
+      include: {
+        enrollment: {
+          include: {
+            user: {
+              select: { id: true, name: true },
+            },
+          },
+        },
+      },
+      orderBy: { dueDate: 'asc' },
+    });
+  }
+
+  async markLatePayments() {
+    const now = new Date();
+
+    return this.prisma.payment.updateMany({
+      where: {
+        dueDate: { lt: now },
+        status: 'pending',
+      },
+      data: {
+        status: 'late',
+      },
+    });
   }
 }
