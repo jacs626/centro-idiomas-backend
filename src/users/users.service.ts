@@ -1,58 +1,55 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto/update-user.dto';
 import * as bcrypt from 'bcrypt';
 
-type User = {
-  id: number;
-  name: string;
-  email: string;
-  password: string;
-  role: string;
-};
-
 @Injectable()
 export class UsersService {
-  private users: User[] = [];
+  constructor(private prisma: PrismaService) {}
 
-  findAll() {
-    return this.users.map(({ password, ...user }) => user);
+  async findAll() {
+    const users = await this.prisma.user.findMany();
+    return users.map(({ password, ...user }) => user);
   }
 
   async create(dto: CreateUserDto) {
     const hashedPassword = await bcrypt.hash(dto.password, 10);
-    const newUser: User = {
-      id: Date.now(),
-      ...dto,
-      password: hashedPassword,
-    };
-    this.users.push(newUser);
+    const newUser = await this.prisma.user.create({
+      data: {
+        ...dto,
+        password: hashedPassword,
+      },
+    });
     const { password, ...result } = newUser;
     return result;
   }
 
-  update(id: number, dto: UpdateUserDto) {
-    const index = this.users.findIndex((u) => u.id === id);
-    if (index === -1) {
+  async update(id: number, dto: UpdateUserDto) {
+    const user = await this.prisma.user.findUnique({ where: { id } });
+    if (!user) {
       throw new NotFoundException(`User with id ${id} not found`);
     }
-    this.users[index] = { ...this.users[index], ...dto };
-    const { password, ...result } = this.users[index];
+    const updated = await this.prisma.user.update({
+      where: { id },
+      data: dto,
+    });
+    const { password, ...result } = updated;
     return result;
   }
 
-  remove(id: number) {
-    const index = this.users.findIndex((u) => u.id === id);
-    if (index === -1) {
+  async remove(id: number) {
+    const user = await this.prisma.user.findUnique({ where: { id } });
+    if (!user) {
       throw new NotFoundException(`User with id ${id} not found`);
     }
-    const deleted = this.users.splice(index, 1);
-    const { password, ...result } = deleted[0];
+    await this.prisma.user.delete({ where: { id } });
+    const { password, ...result } = user;
     return result;
   }
 
-  findById(id: number) {
-    const user = this.users.find((u) => u.id === id);
+  async findById(id: number) {
+    const user = await this.prisma.user.findUnique({ where: { id } });
     if (!user) {
       throw new NotFoundException(`User with id ${id} not found`);
     }
@@ -60,7 +57,7 @@ export class UsersService {
     return result;
   }
 
-  findByEmail(email: string) {
-    return this.users.find((u) => u.email === email);
+  async findByEmail(email: string) {
+    return this.prisma.user.findUnique({ where: { email } });
   }
 }
