@@ -2,12 +2,20 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { EnrollmentsController } from './enrollments.controller';
 import { EnrollmentsService } from './enrollments.service';
 import { NotFoundException } from '@nestjs/common';
+import { CreateEnrollmentDto } from './dto/create-enrollment.dto/create-enrollment.dto';
+import { UpdateEnrollmentDto } from './dto/update-enrollment.dto/update-enrollment.dto';
 
 describe('EnrollmentsController', () => {
   let controller: EnrollmentsController;
   let service: EnrollmentsService;
 
-  const mockEnrollment = { id: 1, userId: 1, groupId: 1, status: 'active' };
+  const mockEnrollment: CreateEnrollmentDto & { id: number } = {
+    id: 1,
+    userId: 1,
+    groupId: 1,
+    status: 'active',
+    progress: 0,
+  };
 
   const mockEnrollmentsService = {
     findAll: jest.fn(),
@@ -60,24 +68,53 @@ describe('EnrollmentsController', () => {
 
   describe('create', () => {
     it('should create an enrollment', () => {
-      const dto = { userId: 1, groupId: 1, status: 'active' };
+      const dto: CreateEnrollmentDto = {
+        userId: 1,
+        groupId: 1,
+        status: 'active',
+        progress: 0,
+      };
       mockEnrollmentsService.create.mockReturnValue(mockEnrollment);
       expect(controller.create(dto)).toEqual(mockEnrollment);
       expect(mockEnrollmentsService.create).toHaveBeenCalledWith(dto);
+    });
+
+    it('should accept valid CreateEnrollmentDto', () => {
+      const dto: CreateEnrollmentDto = {
+        userId: 2,
+        groupId: 3,
+        status: 'pending',
+        progress: 50,
+      };
+      mockEnrollmentsService.create.mockReturnValue({ id: 2, ...dto });
+      expect(controller.create(dto)).toBeDefined();
     });
   });
 
   describe('update', () => {
     it('should update an enrollment', () => {
-      const dto = { status: 'completed' };
-      mockEnrollmentsService.update.mockReturnValue({ ...mockEnrollment, ...dto });
-      expect(controller.update('1', dto)).toEqual({ ...mockEnrollment, ...dto });
+      const dto: UpdateEnrollmentDto = { status: 'completed' };
+      const updatedEnrollment = { ...mockEnrollment, ...dto };
+      mockEnrollmentsService.update.mockReturnValue(updatedEnrollment);
+      expect(controller.update('1', dto)).toEqual(updatedEnrollment);
       expect(mockEnrollmentsService.update).toHaveBeenCalledWith(1, dto);
     });
 
+    it('should update only progress field', () => {
+      const dto: UpdateEnrollmentDto = { progress: 100 };
+      const updatedEnrollment = { ...mockEnrollment, progress: 100 };
+      mockEnrollmentsService.update.mockReturnValue(updatedEnrollment);
+      expect(controller.update('1', dto)).toEqual(updatedEnrollment);
+    });
+
     it('should throw NotFoundException when not found', async () => {
-      mockEnrollmentsService.update = jest.fn().mockRejectedValue(new NotFoundException());
-      await expect(controller.update('999', {})).rejects.toThrow(NotFoundException);
+      mockEnrollmentsService.update = jest
+        .fn()
+        .mockRejectedValue(new NotFoundException());
+      const dto: UpdateEnrollmentDto = { status: 'cancelled' };
+      await expect(controller.update('999', dto)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -89,7 +126,9 @@ describe('EnrollmentsController', () => {
     });
 
     it('should throw NotFoundException when not found', async () => {
-      mockEnrollmentsService.remove = jest.fn().mockRejectedValue(new NotFoundException());
+      mockEnrollmentsService.remove = jest
+        .fn()
+        .mockRejectedValue(new NotFoundException());
       await expect(controller.remove('999')).rejects.toThrow(NotFoundException);
     });
   });

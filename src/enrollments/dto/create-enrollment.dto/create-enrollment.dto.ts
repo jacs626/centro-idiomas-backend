@@ -9,4 +9,7 @@ export class CreateEnrollmentDto {
 
   @IsString()
   status!: string;
+
+  @IsNumber()
+  progress!: number;
 }

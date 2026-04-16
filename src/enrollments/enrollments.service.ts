@@ -7,6 +7,7 @@ type Enrollment = {
   userId: number;
   groupId: number;
   status: string;
+  progress: number;
 };
 
 @Injectable()
