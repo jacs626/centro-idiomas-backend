@@ -11,10 +11,56 @@ export class CoursesService {
     return this.prisma.course.findMany();
   }
 
+  async findEnrolledByUser(userId: number) {
+    const enrollments = await this.prisma.enrollment.findMany({
+      where: { userId, status: { not: 'dropped' } },
+      include: {
+        group: {
+          include: { course: true },
+        },
+      },
+    });
+    
+    const courses = enrollments.map((e) => e.group.course);
+    const uniqueCourses = courses.filter(
+      (course, index, self) => index === self.findIndex((c) => c.id === course.id)
+    );
+    
+    return uniqueCourses;
+  }
+
   async findOne(id: number) {
     return this.prisma.course.findUnique({
       where: { id },
     });
+  }
+
+  async findOneWithAccess(id: number, user: { sub: number; role: string }) {
+    const course = await this.prisma.course.findUnique({
+      where: { id },
+    });
+    
+    if (!course) {
+      throw new NotFoundException(`Course with id ${id} not found`);
+    }
+    
+    if (user.role === 'admin') {
+      return course;
+    }
+    
+    const enrollment = await this.prisma.enrollment.findFirst({
+      where: {
+        userId: user.sub,
+        group: { courseId: id },
+        status: { not: 'dropped' },
+      },
+    });
+    
+    if (!enrollment) {
+      throw new NotFoundException(`Course with id ${id} not found`);
+    }
+    
+    return course;
   }
 
   async create(dto: CreateCourseDto) {

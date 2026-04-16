@@ -13,6 +13,48 @@ export class GroupsService {
     });
   }
 
+  async findEnrolledByUser(userId: number) {
+    const enrollments = await this.prisma.enrollment.findMany({
+      where: { userId, status: { not: 'dropped' } },
+      include: { group: { include: { course: true, teacher: true } } },
+    });
+    return enrollments.map((e) => e.group);
+  }
+
+  async findByCourse(courseId: number) {
+    return this.prisma.group.findMany({
+      where: { courseId },
+      include: { course: true, teacher: true },
+    });
+  }
+
+  async findByCourseWithAccess(courseId: number, user: { sub: number; role: string }) {
+    if (user.role === 'admin' || user.role === 'profesor') {
+      return this.prisma.group.findMany({
+        where: { courseId },
+        include: { course: true, teacher: true },
+      });
+    }
+    const enrollments = await this.prisma.enrollment.findMany({
+      where: { userId: user.sub, status: { not: 'dropped' } },
+      include: { group: { include: { course: true } } },
+    });
+    return enrollments
+      .filter((e) => e.group.courseId === courseId)
+      .map((e) => e.group);
+  }
+
+  async findOne(id: number) {
+    const group = await this.prisma.group.findUnique({
+      where: { id },
+      include: { course: true, teacher: true, enrollments: true },
+    });
+    if (!group) {
+      throw new NotFoundException(`Group with id ${id} not found`);
+    }
+    return group;
+  }
+
   async create(dto: CreateGroupDto) {
     return this.prisma.group.create({
       data: {
@@ -43,18 +85,5 @@ export class GroupsService {
     }
     await this.prisma.group.delete({ where: { id } });
     return group;
-  }
-
-  async findByCourse(courseId: number) {
-    return this.prisma.group.findMany({
-      where: { courseId },
-      include: { course: true, teacher: true },
-    });
-  }
-
-  async findById(id: number) {
-    return this.prisma.group.findMany({
-      where: { id },
-    });
   }
 }

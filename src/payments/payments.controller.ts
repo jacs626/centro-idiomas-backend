@@ -35,6 +35,11 @@ export class PaymentsController {
     return this.paymentsService.findByEnrollment(id);
   }
 
+  @Get('by-enrollment/:enrollmentId')
+  findByEnrollmentAlt(@Param('enrollmentId', ParseIntPipe) enrollmentId: number) {
+    return this.paymentsService.findByEnrollment(enrollmentId);
+  }
+
   @Get('group/:id')
   findByGroup(@Param('id', ParseIntPipe) id: number) {
     return this.paymentsService.findByGroup(id);
