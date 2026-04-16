@@ -6,10 +6,4 @@ export class CreateEnrollmentDto {
 
   @IsNumber()
   groupId!: number;
-
-  @IsNumber()
-  progress!: number;
-
-  @IsIn(['active', 'dropped', 'completed'])
-  status!: 'active' | 'dropped' | 'completed';
 }

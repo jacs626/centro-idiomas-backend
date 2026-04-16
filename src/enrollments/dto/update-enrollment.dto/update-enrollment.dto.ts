@@ -1,9 +1,9 @@
-import { IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsNumber, IsOptional, IsIn } from 'class-validator';
 
 export class UpdateEnrollmentDto {
-  @IsString()
+  @IsIn(['active', 'dropped', 'completed'])
   @IsOptional()
-  status?: string;
+  status?: 'active' | 'dropped' | 'completed';
 
   @IsNumber()
   @IsOptional()

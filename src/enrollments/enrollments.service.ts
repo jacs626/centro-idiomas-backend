@@ -1,65 +1,96 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
 import { CreateEnrollmentDto } from './dto/create-enrollment.dto/create-enrollment.dto';
 import { UpdateEnrollmentDto } from './dto/update-enrollment.dto/update-enrollment.dto';
 
-type Enrollment = {
-  id: number;
-  userId: number;
-  groupId: number;
-  status: string;
-  progress: number;
-};
-
 @Injectable()
 export class EnrollmentsService {
-  private enrollments: Enrollment[] = [];
+  constructor(private prisma: PrismaService) {}
 
-  findAll() {
-    return this.enrollments;
+  async findAll() {
+    return this.prisma.enrollment.findMany({
+      include: {
+        user: { select: { id: true, name: true, email: true } },
+        group: { select: { id: true, name: true, courseId: true } },
+      },
+    });
   }
 
-  create(dto: CreateEnrollmentDto) {
-    const newEnrollment: Enrollment = {
-      id: Date.now(),
-      ...dto,
-    };
-    this.enrollments.push(newEnrollment);
-    return newEnrollment;
+  async create(dto: CreateEnrollmentDto) {
+    return this.prisma.enrollment.create({
+      data: {
+        ...dto,
+        progress: 0,
+        status: 'active',
+      },
+      include: {
+        user: { select: { id: true, name: true, email: true } },
+        group: { select: { id: true, name: true, courseId: true } },
+      },
+    });
   }
 
-  update(id: number, dto: UpdateEnrollmentDto) {
-    const index = this.enrollments.findIndex((e) => e.id === id);
-    if (index === -1) {
+  async update(id: number, dto: UpdateEnrollmentDto) {
+    const enrollment = await this.prisma.enrollment.findUnique({
+      where: { id },
+    });
+    if (!enrollment) {
       throw new NotFoundException(`Enrollment with id ${id} not found`);
     }
-    this.enrollments[index] = { ...this.enrollments[index], ...dto };
-    return this.enrollments[index];
+    return this.prisma.enrollment.update({
+      where: { id },
+      data: dto,
+      include: {
+        user: { select: { id: true, name: true, email: true } },
+        group: { select: { id: true, name: true, courseId: true } },
+      },
+    });
   }
 
-  remove(id: number) {
-    const index = this.enrollments.findIndex((e) => e.id === id);
-    if (index === -1) {
+  async remove(id: number) {
+    const enrollment = await this.prisma.enrollment.findUnique({
+      where: { id },
+    });
+    if (!enrollment) {
       throw new NotFoundException(`Enrollment with id ${id} not found`);
     }
-    const deleted = this.enrollments.splice(index, 1);
-    return deleted[0];
+    await this.prisma.enrollment.delete({ where: { id } });
+    return enrollment;
   }
 
-  findByUser(userId: number) {
-    return this.enrollments.filter((e) => e.userId === userId);
+  async findByUser(userId: number) {
+    return this.prisma.enrollment.findMany({
+      where: { userId },
+      include: {
+        user: { select: { id: true, name: true, email: true } },
+        group: { select: { id: true, name: true, courseId: true } },
+      },
+    });
   }
 
-  findByGroup(groupId: number) {
-    return this.enrollments.filter((e) => e.groupId === groupId);
+  async findByGroup(groupId: number) {
+    return this.prisma.enrollment.findMany({
+      where: { groupId },
+      include: {
+        user: { select: { id: true, name: true, email: true } },
+        group: { select: { id: true, name: true, courseId: true } },
+      },
+    });
   }
 
-  findByUserAndGroup(userId: number, groupId: number) {
-    return this.enrollments.filter(
-      (e) => e.userId === userId && e.groupId === groupId,
-    );
+  async findByUserAndGroup(userId: number, groupId: number) {
+    return this.prisma.enrollment.findMany({
+      where: { userId, groupId },
+    });
   }
 
-  findById(id: number) {
-    return this.enrollments.find((e) => e.id === id);
+  async findById(id: number) {
+    return this.prisma.enrollment.findUnique({
+      where: { id },
+      include: {
+        user: { select: { id: true, name: true, email: true } },
+        group: { select: { id: true, name: true, courseId: true } },
+      },
+    });
   }
 }
