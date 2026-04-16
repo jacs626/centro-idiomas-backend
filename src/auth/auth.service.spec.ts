@@ -66,13 +66,14 @@ describe('AuthService', () => {
         password: 'hashedpassword',
         role: 'alumno',
       };
-      mockUsersService.findByEmail.mockReturnValue(mockUser);
+      mockUsersService.findByEmail.mockResolvedValue(mockUser);
 
       const loginDto = { email: 'john@example.com', password: 'password123' };
       const result = await service.login(loginDto);
       expect(result).toHaveProperty('access_token');
       expect(mockJwtService.sign).toHaveBeenCalledWith({
         sub: 1,
+        email: 'john@example.com',
         role: 'alumno',
       });
     });
@@ -108,6 +109,8 @@ describe('AuthService', () => {
 
   describe('integration: create user via UsersService, authenticate via AuthService', () => {
     it('should authenticate a user created through UsersService', async () => {
+      mockUsersService.findByEmail.mockResolvedValueOnce(null);
+
       const newUser = {
         id: 2,
         name: 'Maria Garcia',
@@ -116,7 +119,7 @@ describe('AuthService', () => {
         role: 'alumno',
       };
       mockUsersService.create.mockResolvedValue(newUser);
-      mockUsersService.findByEmail.mockReturnValue(newUser);
+      mockUsersService.findByEmail.mockResolvedValueOnce(newUser);
 
       await service.register({
         name: 'Maria Garcia',

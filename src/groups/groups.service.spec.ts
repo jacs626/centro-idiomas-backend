@@ -89,8 +89,8 @@ describe('GroupsService', () => {
           name: 'Group A',
           courseId: 1,
           teacherId: 1,
-          startDate: '2024-01-01',
-          endDate: '2024-06-01',
+          startDate: new Date('2024-01-01'),
+          endDate: new Date('2024-06-01'),
           course: {},
           teacher: {},
         };
@@ -100,7 +100,13 @@ describe('GroupsService', () => {
         expect(result.name).toBe('Group A');
         expect(result.courseId).toBe(1);
         expect(prisma.group.create).toHaveBeenCalledWith({
-          data: dto,
+          data: {
+            name: 'Group A',
+            courseId: 1,
+            teacherId: 1,
+            startDate: new Date('2024-01-01'),
+            endDate: new Date('2024-06-01'),
+          },
           include: { course: true, teacher: true },
         });
       });
