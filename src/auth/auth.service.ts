@@ -14,11 +14,17 @@ export class AuthService {
 
   async register(dto: RegisterDto) {
     const role = dto.role || 'alumno';
+
+    const existing = await this.usersService.findByEmail(dto.email);
+    if (existing) {
+      throw new UnauthorizedException('Email already in use');
+    }
+
     await this.usersService.create({
       name: dto.name,
       email: dto.email,
       password: dto.password,
-      role: role as 'admin' | 'profesor' | 'alumno',
+      role: 'alumno',
     });
 
     return { message: 'User created' };
@@ -33,11 +39,14 @@ export class AuthService {
 
     if (!valid) throw new UnauthorizedException('Invalid credentials');
 
-    const token = this.jwtService.sign({
+    const payload = {
       sub: user.id,
+      email: user.email,
       role: user.role,
-    });
+    };
 
-    return { access_token: token };
+    return {
+      access_token: this.jwtService.sign(payload),
+    };
   }
 }

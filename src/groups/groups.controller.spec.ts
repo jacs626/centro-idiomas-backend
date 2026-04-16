@@ -7,7 +7,26 @@ describe('GroupsController', () => {
   let controller: GroupsController;
   let service: GroupsService;
 
-  const mockGroup = { id: 1, name: 'Group A', courseId: 1 };
+  const mockGroup = {
+    id: 1,
+    name: 'Group A',
+    courseId: 1,
+    teacherId: 1,
+    startDate: new Date('2024-01-01'),
+    endDate: new Date('2024-06-01'),
+    course: {
+      id: 1,
+      name: 'English',
+      level: 'A1',
+      description: 'English course',
+    },
+    teacher: {
+      id: 1,
+      name: 'Teacher',
+      email: 'teacher@example.com',
+      role: 'profesor',
+    },
+  };
 
   const mockGroupsService = {
     findAll: jest.fn(),
@@ -20,9 +39,7 @@ describe('GroupsController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [GroupsController],
-      providers: [
-        { provide: GroupsService, useValue: mockGroupsService },
-      ],
+      providers: [{ provide: GroupsService, useValue: mockGroupsService }],
     }).compile();
 
     controller = module.get<GroupsController>(GroupsController);
@@ -34,53 +51,68 @@ describe('GroupsController', () => {
   });
 
   describe('findAll', () => {
-    it('should return all groups', () => {
-      mockGroupsService.findAll.mockReturnValue([mockGroup]);
-      expect(controller.findAll()).toEqual([mockGroup]);
+    it('should return all groups', async () => {
+      mockGroupsService.findAll.mockResolvedValue([mockGroup]);
+      expect(await controller.findAll()).toEqual([mockGroup]);
       expect(mockGroupsService.findAll).toHaveBeenCalled();
     });
   });
 
   describe('findByCourse', () => {
-    it('should return groups by course', () => {
-      mockGroupsService.findByCourse.mockReturnValue([mockGroup]);
-      expect(controller.findByCourse('1')).toEqual([mockGroup]);
+    it('should return groups by course', async () => {
+      mockGroupsService.findByCourse.mockResolvedValue([mockGroup]);
+      expect(await controller.findByCourse('1')).toEqual([mockGroup]);
       expect(mockGroupsService.findByCourse).toHaveBeenCalledWith(1);
     });
   });
 
   describe('create', () => {
-    it('should create a group', () => {
-      const dto = { name: 'Group B', courseId: 2 };
-      mockGroupsService.create.mockReturnValue({ id: 2, ...dto });
-      expect(controller.create(dto)).toEqual({ id: 2, ...dto });
+    it('should create a group', async () => {
+      const dto = {
+        name: 'Group B',
+        courseId: 2,
+        teacherId: 1,
+        startDate: '2024-01-01',
+        endDate: '2024-06-01',
+      };
+      mockGroupsService.create.mockResolvedValue({ id: 2, ...dto });
+      expect(await controller.create(dto)).toEqual({ id: 2, ...dto });
       expect(mockGroupsService.create).toHaveBeenCalledWith(dto);
     });
   });
 
   describe('update', () => {
-    it('should update a group', () => {
+    it('should update a group', async () => {
       const dto = { name: 'Updated Group' };
-      mockGroupsService.update.mockReturnValue({ ...mockGroup, ...dto });
-      expect(controller.update('1', dto)).toEqual({ ...mockGroup, ...dto });
+      mockGroupsService.update.mockResolvedValue({ ...mockGroup, ...dto });
+      expect(await controller.update('1', dto)).toEqual({
+        ...mockGroup,
+        ...dto,
+      });
       expect(mockGroupsService.update).toHaveBeenCalledWith(1, dto);
     });
 
     it('should throw NotFoundException when group not found', async () => {
-      mockGroupsService.update = jest.fn().mockRejectedValue(new NotFoundException());
-      await expect(controller.update('999', {})).rejects.toThrow(NotFoundException);
+      mockGroupsService.update = jest
+        .fn()
+        .mockRejectedValue(new NotFoundException());
+      await expect(controller.update('999', {})).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
   describe('remove', () => {
-    it('should remove a group', () => {
-      mockGroupsService.remove.mockReturnValue(mockGroup);
-      expect(controller.remove('1')).toEqual(mockGroup);
+    it('should remove a group', async () => {
+      mockGroupsService.remove.mockResolvedValue(mockGroup);
+      expect(await controller.remove('1')).toEqual(mockGroup);
       expect(mockGroupsService.remove).toHaveBeenCalledWith(1);
     });
 
     it('should throw NotFoundException when group not found', async () => {
-      mockGroupsService.remove = jest.fn().mockRejectedValue(new NotFoundException());
+      mockGroupsService.remove = jest
+        .fn()
+        .mockRejectedValue(new NotFoundException());
       await expect(controller.remove('999')).rejects.toThrow(NotFoundException);
     });
   });

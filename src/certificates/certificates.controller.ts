@@ -1,8 +1,20 @@
-import { Controller, Get, Param, Res, ParseIntPipe } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Param,
+  Res,
+  ParseIntPipe,
+  UseGuards,
+} from '@nestjs/common';
 import { CertificatesService } from './certificates.service';
 import type { Response } from 'express';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { RolesGuard } from '../auth/roles.guard';
+import { Roles } from '../auth/roles.decorator';
 
 @Controller('certificates')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('admin', 'profesor')
 export class CertificatesController {
   constructor(private readonly certificatesService: CertificatesService) {}
 

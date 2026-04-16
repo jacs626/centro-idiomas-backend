@@ -18,17 +18,19 @@ model User {
   password    String
   role        String
   createdAt   DateTime  @default(now())
+  deletedAt   DateTime?
 
 
   groupsTaught Group[]      @relation("TeacherGroups")
   enrollments  Enrollment[]
-  authSessions AuthSession[]
+
+  @@index([deletedAt])
 }
 
 model Course {
   id          Int       @id @default(autoincrement())
-  name        String    // A1 Speaking
-  level       String    // A1-C2
+  name        String    
+  level       String    
   description String
   createdAt   DateTime  @default(now())
 
@@ -37,7 +39,7 @@ model Course {
 
 model Group {
   id          Int       @id @default(autoincrement())
-  name        String    // A1-01
+  name        String    
   courseId    Int
   teacherId   Int
   startDate   DateTime
@@ -54,8 +56,8 @@ model Enrollment {
   id          Int       @id @default(autoincrement())
   userId      Int
   groupId     Int
-  progress    Int       // 0 - 100
-  status      String    // active | dropped | completed
+  progress    Int       
+  status      String    
   createdAt   DateTime  @default(now())
 
 
@@ -72,7 +74,7 @@ model Attendance {
   id            Int       @id @default(autoincrement())
   enrollmentId  Int
   date          DateTime
-  status        String    // present | absent | late
+  status        String    
 
 
   enrollment    Enrollment @relation(fields: [enrollmentId], references: [id])
@@ -82,8 +84,8 @@ model Payment {
   id            Int       @id @default(autoincrement())
   enrollmentId  Int
   amount        Decimal
-  type          String    // matricula | cuota
-  status        String    // pending | paid | late
+  type          String   
+  status        String   
   dueDate       DateTime
   paidAt        DateTime?
 
@@ -99,14 +101,4 @@ model Certificate {
 
 
   enrollment    Enrollment @relation(fields: [enrollmentId], references: [id])
-}
-
-model AuthSession {
-  id        Int       @id @default(autoincrement())
-  userId    Int
-  token     String
-  createdAt DateTime  @default(now())
-
-
-  user      User      @relation(fields: [userId], references: [id])
 }
