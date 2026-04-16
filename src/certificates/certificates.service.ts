@@ -1,72 +1,128 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { CreateCertificateDto } from './dto/create-certificate.dto/create-certificate.dto';
-import { UpdateCertificateDto } from './dto/update-certificate.dto/update-certificate.dto';
-import { EnrollmentsService } from '../enrollments/enrollments.service';
-
-type Certificate = {
-  id: number;
-  enrollmentId: number;
-  issuedAt: string;
-  fileUrl: string;
-};
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
+import PDFDocument from 'pdfkit';
+import { Response } from 'express';
 
 @Injectable()
 export class CertificatesService {
-  private certificates: Certificate[] = [];
+  constructor(private prisma: PrismaService) {}
 
-  constructor(private enrollmentService: EnrollmentsService) {}
+  async generate(enrollmentId: number, res: Response) {
+    const enrollment = await this.prisma.enrollment.findUnique({
+      where: { id: enrollmentId },
+      include: {
+        user: true,
+        group: {
+          include: {
+            course: true,
+          },
+        },
+      },
+    });
 
-  findAll() {
-    return this.certificates;
-  }
-
-  async create(dto: CreateCertificateDto) {
-    const enrollment = await this.enrollmentService.findById(dto.enrollmentId);
-    if (!enrollment || enrollment.progress < 80) {
-      throw new NotFoundException('Enrollment not found or progress below 80%');
+    if (!enrollment) {
+      throw new NotFoundException('Enrollment no existe');
     }
 
-    const existingCert = this.certificates.find(
-      (c) => c.enrollmentId === dto.enrollmentId,
-    );
-    if (existingCert) {
-      throw new NotFoundException(
-        'Certificate already exists for this enrollment',
+    if (enrollment.progress < 80) {
+      throw new BadRequestException(
+        'No cumple el mínimo para certificado (80%)',
       );
     }
 
-    const id = Date.now();
-    const pdfUrl = `/certificates/${id}.pdf`;
+    await this.prisma.certificate.upsert({
+      where: { enrollmentId },
+      update: {
+        issuedAt: new Date(),
+      },
+      create: {
+        enrollmentId,
+        fileUrl: `cert-${enrollmentId}.pdf`,
+      },
+    });
 
-    const certificate: Certificate = {
-      id,
-      enrollmentId: dto.enrollmentId,
-      issuedAt: new Date().toISOString(),
-      fileUrl: pdfUrl,
-    };
-
-    this.certificates.push(certificate);
-    return certificate;
+    return this.generatePdf(enrollment, res);
   }
 
-  update(id: number, dto: UpdateCertificateDto) {
-    const index = this.certificates.findIndex((c) => c.id === id);
-    if (index === -1) {
-      throw new NotFoundException(`Certificate with id ${id} not found`);
+  async download(enrollmentId: number, res: Response) {
+    const certificate = await this.prisma.certificate.findUnique({
+      where: { enrollmentId },
+      include: {
+        enrollment: {
+          include: {
+            user: true,
+            group: {
+              include: {
+                course: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!certificate) {
+      throw new NotFoundException('Certificado no encontrado');
     }
-    this.certificates[index] = { ...this.certificates[index], ...dto };
-    return this.certificates[index];
+
+    return this.generatePdf(certificate.enrollment, res);
   }
 
-  remove(id: number) {
-    const index = this.certificates.findIndex((c) => c.id === id);
-    if (index === -1) {
-      throw new NotFoundException(`Certificate with id ${id} not found`);
+  async findAll() {
+    return this.prisma.certificate.findMany({
+      include: {
+        enrollment: {
+          include: {
+            user: { select: { id: true, name: true, email: true } },
+            group: { select: { id: true, name: true } },
+          },
+        },
+      },
+    });
+  }
+
+  async findByEnrollment(enrollmentId: number) {
+    const cert = await this.prisma.certificate.findUnique({
+      where: { enrollmentId },
+    });
+
+    if (!cert) {
+      throw new NotFoundException('Certificado no encontrado');
     }
-    return this.certificates.splice(index, 1)[0];
+
+    return cert;
   }
 
-  findByEnrollment(enrollmentId: number) {
-    return this.certificates.filter((c) => c.enrollmentId === enrollmentId);
+  private generatePdf(enrollment: any, res: Response) {
+    const doc = new PDFDocument();
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename=cert-${enrollment.id}.pdf`,
+    );
+
+    doc.pipe(res);
+
+    doc.fontSize(22).text('CERTIFICADO', { align: 'center' });
+
+    doc.moveDown();
+    doc.fontSize(14).text(`Alumno: ${enrollment.user.name}`);
+    doc.text(`Curso: ${enrollment.group.course.name}`);
+    doc.text(`Grupo: ${enrollment.group.name}`);
+    doc.text(`Progreso: ${enrollment.progress}%`);
+
+    doc.moveDown();
+    doc.text('Ha completado el curso satisfactoriamente.');
+
+    doc.moveDown();
+    doc.text(`Fecha: ${new Date().toLocaleDateString()}`);
+    doc.text(`Código: CERT-${enrollment.id}`);
+
+    doc.end();
   }
 }

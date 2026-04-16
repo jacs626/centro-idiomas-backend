@@ -1,43 +1,28 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Delete,
-  Param,
-  Query,
-} from '@nestjs/common';
+import { Controller, Get, Param, Res, ParseIntPipe } from '@nestjs/common';
 import { CertificatesService } from './certificates.service';
-import { CreateCertificateDto } from './dto/create-certificate.dto/create-certificate.dto';
-import { UpdateCertificateDto } from './dto/update-certificate.dto/update-certificate.dto';
+import type { Response } from 'express';
 
 @Controller('certificates')
 export class CertificatesController {
   constructor(private readonly certificatesService: CertificatesService) {}
+
+  @Get('generate/:id')
+  generate(@Param('id', ParseIntPipe) id: number, @Res() res: Response) {
+    return this.certificatesService.generate(id, res);
+  }
+
+  @Get('download/:id')
+  download(@Param('id', ParseIntPipe) id: number, @Res() res: Response) {
+    return this.certificatesService.download(id, res);
+  }
 
   @Get()
   findAll() {
     return this.certificatesService.findAll();
   }
 
-  @Get('by-enrollment')
-  findByEnrollment(@Query('enrollmentId') enrollmentId: string) {
-    return this.certificatesService.findByEnrollment(Number(enrollmentId));
-  }
-
-  @Post()
-  create(@Body() dto: CreateCertificateDto) {
-    return this.certificatesService.create(dto);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() dto: UpdateCertificateDto) {
-    return this.certificatesService.update(Number(id), dto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.certificatesService.remove(Number(id));
+  @Get('enrollment/:id')
+  findByEnrollment(@Param('id', ParseIntPipe) id: number) {
+    return this.certificatesService.findByEnrollment(id);
   }
 }
