@@ -1,15 +1,12 @@
-import { IsNumber, IsString } from 'class-validator';
+import { IsNumber, IsDateString, IsIn } from 'class-validator';
 
 export class CreateAttendanceDto {
   @IsNumber()
-  userId!: number;
+  enrollmentId!: number;
 
-  @IsNumber()
-  groupId!: number;
-
-  @IsString()
+  @IsDateString()
   date!: string;
 
-  @IsString()
+  @IsIn(['present', 'absent', 'late'])
   status!: 'present' | 'absent' | 'late';
 }

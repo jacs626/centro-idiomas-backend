@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Body, Patch, Delete, Param, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Delete,
+  Param,
+  Query,
+} from '@nestjs/common';
 import { CertificatesService } from './certificates.service';
 import { CreateCertificateDto } from './dto/create-certificate.dto/create-certificate.dto';
 import { UpdateCertificateDto } from './dto/update-certificate.dto/update-certificate.dto';
@@ -12,14 +21,9 @@ export class CertificatesController {
     return this.certificatesService.findAll();
   }
 
-  @Get('by-user')
-  findByUser(@Query('userId') userId: string) {
-    return this.certificatesService.findByUser(Number(userId));
-  }
-
-  @Get('by-course')
-  findByCourse(@Query('courseId') courseId: string) {
-    return this.certificatesService.findByCourse(Number(courseId));
+  @Get('by-enrollment')
+  findByEnrollment(@Query('enrollmentId') enrollmentId: string) {
+    return this.certificatesService.findByEnrollment(Number(enrollmentId));
   }
 
   @Post()

@@ -83,7 +83,7 @@ describe('EnrollmentsController', () => {
       const dto: CreateEnrollmentDto = {
         userId: 2,
         groupId: 3,
-        status: 'pending',
+        status: 'active',
         progress: 50,
       };
       mockEnrollmentsService.create.mockReturnValue({ id: 2, ...dto });

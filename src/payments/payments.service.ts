@@ -4,13 +4,12 @@ import { UpdatePaymentDto } from './dto/update-payment.dto/update-payment.dto';
 
 type Payment = {
   id: number;
-  userId: number;
-  groupId: number;
+  enrollmentId: number;
   amount: number;
   type: 'matricula' | 'cuota';
   status: 'pending' | 'paid' | 'late';
-  dueDate: string;
-  paidAt?: string;
+  dueDate: Date | string;
+  paidAt?: Date | string;
 };
 
 @Injectable()
@@ -24,7 +23,12 @@ export class PaymentsService {
   create(dto: CreatePaymentDto) {
     const newPayment: Payment = {
       id: Date.now(),
-      ...dto,
+      enrollmentId: dto.enrollmentId,
+      amount: dto.amount,
+      type: dto.type,
+      status: dto.status,
+      dueDate: new Date(dto.dueDate),
+      paidAt: dto.paidAt ? new Date(dto.paidAt) : undefined,
     };
     this.payments.push(newPayment);
     return newPayment;
@@ -47,12 +51,8 @@ export class PaymentsService {
     return this.payments.splice(index, 1)[0];
   }
 
-  findByUser(userId: number) {
-    return this.payments.filter((p) => p.userId === userId);
-  }
-
-  findByGroup(groupId: number) {
-    return this.payments.filter((p) => p.groupId === groupId);
+  findByEnrollment(enrollmentId: number) {
+    return this.payments.filter((p) => p.enrollmentId === enrollmentId);
   }
 
   findByStatus(status: 'pending' | 'paid' | 'late') {

@@ -1,4 +1,4 @@
-import { IsNumber, IsString } from 'class-validator';
+import { IsNumber, IsOptional, IsIn } from 'class-validator';
 
 export class CreateEnrollmentDto {
   @IsNumber()
@@ -7,9 +7,9 @@ export class CreateEnrollmentDto {
   @IsNumber()
   groupId!: number;
 
-  @IsString()
-  status!: string;
-
   @IsNumber()
   progress!: number;
+
+  @IsIn(['active', 'dropped', 'completed'])
+  status!: 'active' | 'dropped' | 'completed';
 }

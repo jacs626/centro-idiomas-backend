@@ -4,6 +4,9 @@ export class CreateCourseDto {
   @IsString()
   name!: string;
 
+  @IsString()
+  level!: string;
+
   @IsOptional()
   @IsString()
   description?: string;

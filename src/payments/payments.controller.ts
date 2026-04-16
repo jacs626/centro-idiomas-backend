@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Body, Patch, Delete, Param, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Delete,
+  Param,
+  Query,
+} from '@nestjs/common';
 import { PaymentsService } from './payments.service';
 import { CreatePaymentDto } from './dto/create-payment.dto/create-payment.dto';
 import { UpdatePaymentDto } from './dto/update-payment.dto/update-payment.dto';
@@ -12,19 +21,16 @@ export class PaymentsController {
     return this.paymentsService.findAll();
   }
 
-  @Get('by-user')
-  findByUser(@Query('userId') userId: string) {
-    return this.paymentsService.findByUser(Number(userId));
-  }
-
-  @Get('by-group')
-  findByGroup(@Query('groupId') groupId: string) {
-    return this.paymentsService.findByGroup(Number(groupId));
+  @Get('by-enrollment')
+  findByEnrollment(@Query('enrollmentId') enrollmentId: string) {
+    return this.paymentsService.findByEnrollment(Number(enrollmentId));
   }
 
   @Get('by-status')
   findByStatus(@Query('status') status: string) {
-    return this.paymentsService.findByStatus(status as 'pending' | 'paid' | 'late');
+    return this.paymentsService.findByStatus(
+      status as 'pending' | 'paid' | 'late',
+    );
   }
 
   @Post()

@@ -52,4 +52,14 @@ export class EnrollmentsService {
   findByGroup(groupId: number) {
     return this.enrollments.filter((e) => e.groupId === groupId);
   }
+
+  findByUserAndGroup(userId: number, groupId: number) {
+    return this.enrollments.filter(
+      (e) => e.userId === userId && e.groupId === groupId,
+    );
+  }
+
+  findById(id: number) {
+    return this.enrollments.find((e) => e.id === id);
+  }
 }

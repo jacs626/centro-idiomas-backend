@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Body, Patch, Delete, Param, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Delete,
+  Param,
+  Query,
+} from '@nestjs/common';
 import { AttendanceService } from './attendance.service';
 import { CreateAttendanceDto } from './dto/create-attendance.dto/create-attendance.dto';
 import { UpdateAttendanceDto } from './dto/update-attendance.dto/update-attendance.dto';
@@ -12,14 +21,9 @@ export class AttendanceController {
     return this.attendanceService.findAll();
   }
 
-  @Get('by-user')
-  findByUser(@Query('userId') userId: string) {
-    return this.attendanceService.findByUser(Number(userId));
-  }
-
-  @Get('by-group')
-  findByGroup(@Query('groupId') groupId: string) {
-    return this.attendanceService.findByGroup(Number(groupId));
+  @Get('by-enrollment')
+  findByEnrollment(@Query('enrollmentId') enrollmentId: string) {
+    return this.attendanceService.findByEnrollment(Number(enrollmentId));
   }
 
   @Get('by-date')

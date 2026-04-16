@@ -1,35 +1,38 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateCertificateDto } from './dto/create-certificate.dto/create-certificate.dto';
 import { UpdateCertificateDto } from './dto/update-certificate.dto/update-certificate.dto';
-import { ProgressService } from '../progress/progress.service';
+import { EnrollmentsService } from '../enrollments/enrollments.service';
 
 type Certificate = {
   id: number;
-  userId: number;
-  courseId: number;
+  enrollmentId: number;
   issuedAt: string;
-  pdfUrl: string;
-  approvalPercentage: number;
+  fileUrl: string;
 };
 
 @Injectable()
 export class CertificatesService {
   private certificates: Certificate[] = [];
 
-  constructor(private progressService: ProgressService) {}
+  constructor(private enrollmentService: EnrollmentsService) {}
 
   findAll() {
     return this.certificates;
   }
 
-  create(dto: CreateCertificateDto) {
-    const progress = this.progressService.findByUserAndCourse(
-      dto.userId,
-      dto.courseId,
-    );
+  async create(dto: CreateCertificateDto) {
+    const enrollment = await this.enrollmentService.findById(dto.enrollmentId);
+    if (!enrollment || enrollment.progress < 80) {
+      throw new NotFoundException('Enrollment not found or progress below 80%');
+    }
 
-    if (!progress || progress.percentage < 100) {
-      return { message: 'Course not completed' };
+    const existingCert = this.certificates.find(
+      (c) => c.enrollmentId === dto.enrollmentId,
+    );
+    if (existingCert) {
+      throw new NotFoundException(
+        'Certificate already exists for this enrollment',
+      );
     }
 
     const id = Date.now();
@@ -37,11 +40,9 @@ export class CertificatesService {
 
     const certificate: Certificate = {
       id,
-      userId: dto.userId,
-      courseId: dto.courseId,
+      enrollmentId: dto.enrollmentId,
       issuedAt: new Date().toISOString(),
-      pdfUrl,
-      approvalPercentage: progress.percentage,
+      fileUrl: pdfUrl,
     };
 
     this.certificates.push(certificate);
@@ -65,11 +66,7 @@ export class CertificatesService {
     return this.certificates.splice(index, 1)[0];
   }
 
-  findByUser(userId: number) {
-    return this.certificates.filter((c) => c.userId === userId);
-  }
-
-  findByCourse(courseId: number) {
-    return this.certificates.filter((c) => c.courseId === courseId);
+  findByEnrollment(enrollmentId: number) {
+    return this.certificates.filter((c) => c.enrollmentId === enrollmentId);
   }
 }

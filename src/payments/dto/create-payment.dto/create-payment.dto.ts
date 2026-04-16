@@ -1,11 +1,8 @@
-import { IsNumber, IsString, IsIn } from 'class-validator';
+import { IsNumber, IsDateString, IsIn, IsOptional } from 'class-validator';
 
 export class CreatePaymentDto {
   @IsNumber()
-  userId!: number;
-
-  @IsNumber()
-  groupId!: number;
+  enrollmentId!: number;
 
   @IsNumber()
   amount!: number;
@@ -16,6 +13,10 @@ export class CreatePaymentDto {
   @IsIn(['pending', 'paid', 'late'])
   status!: 'pending' | 'paid' | 'late';
 
-  @IsString()
+  @IsDateString()
   dueDate!: string;
+
+  @IsDateString()
+  @IsOptional()
+  paidAt?: string;
 }

@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AttendanceService } from './attendance.service';
 import { NotFoundException } from '@nestjs/common';
+import { CreateAttendanceDto } from './dto/create-attendance.dto/create-attendance.dto';
 
 describe('AttendanceService', () => {
   let service: AttendanceService;
@@ -14,13 +15,17 @@ describe('AttendanceService', () => {
   });
 
   describe('CRUD Operations', () => {
-    const dto = { userId: 1, groupId: 1, date: '2024-01-01', status: 'present' as const };
+    const dto: CreateAttendanceDto = {
+      enrollmentId: 1,
+      date: '2024-01-01',
+      status: 'present',
+    };
 
     describe('create', () => {
       it('should create an attendance', () => {
         const result = service.create(dto);
         expect(result).toHaveProperty('id');
-        expect(result.userId).toBe(dto.userId);
+        expect(result.enrollmentId).toBe(dto.enrollmentId);
         expect(result.status).toBe(dto.status);
       });
     });
@@ -33,20 +38,21 @@ describe('AttendanceService', () => {
       });
     });
 
-    describe('findByUser', () => {
-      it('should return attendances by user', () => {
+    describe('findByEnrollment', () => {
+      it('should return attendances by enrollment', () => {
         service.create(dto);
-        service.create({ userId: 1, groupId: 2, date: '2024-01-02', status: 'absent' as const });
-        const attendances = service.findByUser(1);
+        service.create({
+          enrollmentId: 1,
+          date: '2024-01-02',
+          status: 'absent',
+        });
+        const attendances = service.findByEnrollment(1);
         expect(attendances).toHaveLength(2);
       });
-    });
 
-    describe('findByGroup', () => {
-      it('should return attendances by group', () => {
-        service.create(dto);
-        const attendances = service.findByGroup(1);
-        expect(attendances).toHaveLength(1);
+      it('should return empty array when no attendances', () => {
+        const attendances = service.findByEnrollment(999);
+        expect(attendances).toHaveLength(0);
       });
     });
 
@@ -66,7 +72,9 @@ describe('AttendanceService', () => {
       });
 
       it('should throw NotFoundException for non-existent', () => {
-        expect(() => service.update(999, { status: 'absent' })).toThrow(NotFoundException);
+        expect(() => service.update(999, { status: 'absent' })).toThrow(
+          NotFoundException,
+        );
       });
     });
 

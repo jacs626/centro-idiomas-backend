@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
 import { CertificatesController } from './certificates.controller';
 import { CertificatesService } from './certificates.service';
-import { ProgressModule } from '../progress/progress.module';
+import { EnrollmentsModule } from '../enrollments/enrollments.module';
 
 @Module({
-  imports: [ProgressModule],
+  imports: [EnrollmentsModule],
   controllers: [CertificatesController],
   providers: [CertificatesService],
   exports: [CertificatesService],

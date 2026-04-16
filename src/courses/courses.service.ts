@@ -5,7 +5,9 @@ import { UpdateCourseDto } from './dto/update-course.dto/update-course.dto';
 type Course = {
   id: number;
   name: string;
+  level: string;
   description?: string;
+  createdAt?: Date;
 };
 
 @Injectable()
@@ -20,6 +22,7 @@ export class CoursesService {
     const newCourse: Course = {
       id: Date.now(),
       ...dto,
+      createdAt: new Date(),
     };
 
     this.courses.push(newCourse);

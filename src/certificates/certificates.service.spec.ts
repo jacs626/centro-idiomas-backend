@@ -1,159 +1,135 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { CertificatesService } from './certificates.service';
-import { ProgressService } from '../progress/progress.service';
+import { EnrollmentsService } from '../enrollments/enrollments.service';
 import { NotFoundException } from '@nestjs/common';
-import { LanguageLevel } from '../progress/enums/language-level.enum';
-
-type Certificate = {
-  id: number;
-  userId: number;
-  courseId: number;
-  issuedAt: string;
-  pdfUrl: string;
-  approvalPercentage: number;
-};
 
 describe('CertificatesService', () => {
   let service: CertificatesService;
-  let progressService: ProgressService;
 
-  const mockProgressService = {
-    findByUserAndCourse: jest.fn(),
+  const mockEnrollmentsService = {
+    findById: jest.fn(),
   };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CertificatesService,
-        { provide: ProgressService, useValue: mockProgressService },
+        { provide: EnrollmentsService, useValue: mockEnrollmentsService },
       ],
     }).compile();
 
     service = module.get<CertificatesService>(CertificatesService);
-    progressService = module.get<ProgressService>(ProgressService);
   });
 
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  describe('CRUD Operations', () => {
-    const dto = { userId: 1, courseId: 1 };
-
-    describe('create', () => {
-      it('should create a certificate when course is completed with pdfUrl and approvalPercentage', () => {
-        mockProgressService.findByUserAndCourse.mockReturnValue({
-          userId: 1,
-          courseId: 1,
-          level: LanguageLevel.A1,
-          percentage: 100,
-        });
-        const result = service.create(dto) as Certificate;
-        expect(result).toHaveProperty('id');
-        expect(result.userId).toBe(dto.userId);
-        expect(result).toHaveProperty('issuedAt');
-        expect(result).toHaveProperty('pdfUrl');
-        expect(result.pdfUrl).toBe(`/certificates/${result.id}.pdf`);
-        expect(result).toHaveProperty('approvalPercentage');
-        expect(result.approvalPercentage).toBe(100);
+  describe('create', () => {
+    it('should create a certificate when enrollment has >=80% progress', async () => {
+      mockEnrollmentsService.findById.mockResolvedValue({
+        id: 1,
+        progress: 80,
       });
-
-      it('should return message when progress not found', () => {
-        mockProgressService.findByUserAndCourse.mockReturnValue(null);
-        const result = service.create(dto);
-        expect(result).toEqual({ message: 'Course not completed' });
-      });
-
-      it('should return message when course not completed', () => {
-        mockProgressService.findByUserAndCourse.mockReturnValue({
-          userId: 1,
-          courseId: 1,
-          level: LanguageLevel.A1,
-          percentage: 50,
-        });
-        const result = service.create(dto);
-        expect(result).toEqual({ message: 'Course not completed' });
-      });
+      const dto = { enrollmentId: 1, fileUrl: '/certificates/1.pdf' };
+      const result = await service.create(dto);
+      expect(result).toHaveProperty('id');
+      expect(result.enrollmentId).toBe(dto.enrollmentId);
     });
 
-    describe('findAll', () => {
-      it('should return all certificates', () => {
-        mockProgressService.findByUserAndCourse.mockReturnValue({
-          userId: 1,
-          courseId: 1,
-          level: LanguageLevel.A1,
-          percentage: 100,
-        });
-        service.create(dto);
-        const certificates = service.findAll();
-        expect(certificates).toHaveLength(1);
-      });
+    it('should throw NotFoundException when enrollment not found', async () => {
+      mockEnrollmentsService.findById.mockResolvedValue(null);
+      const dto = { enrollmentId: 999, fileUrl: '/certificates/1.pdf' };
+      await expect(service.create(dto)).rejects.toThrow(NotFoundException);
     });
 
-    describe('findByUser', () => {
-      it('should return certificates by user', () => {
-        mockProgressService.findByUserAndCourse.mockReturnValue({
-          userId: 1,
-          courseId: 1,
-          level: LanguageLevel.A1,
-          percentage: 100,
-        });
-        service.create(dto);
-        service.create({ userId: 1, courseId: 2 });
-        const certificates = service.findByUser(1);
-        expect(certificates).toHaveLength(2);
+    it('should throw NotFoundException when progress below 80%', async () => {
+      mockEnrollmentsService.findById.mockResolvedValue({
+        id: 1,
+        progress: 50,
       });
+      const dto = { enrollmentId: 1, fileUrl: '/certificates/1.pdf' };
+      await expect(service.create(dto)).rejects.toThrow(NotFoundException);
     });
 
-    describe('findByCourse', () => {
-      it('should return certificates by course', () => {
-        mockProgressService.findByUserAndCourse.mockReturnValue({
-          userId: 1,
-          courseId: 1,
-          level: LanguageLevel.A1,
-          percentage: 100,
-        });
-        service.create(dto);
-        const certificates = service.findByCourse(1);
-        expect(certificates).toHaveLength(1);
+    it('should throw NotFoundException when certificate already exists', async () => {
+      mockEnrollmentsService.findById.mockResolvedValue({
+        id: 1,
+        progress: 80,
       });
+      const dto = { enrollmentId: 1, fileUrl: '/certificates/1.pdf' };
+      await service.create(dto);
+      await expect(service.create(dto)).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('findAll', () => {
+    it('should return all certificates', async () => {
+      mockEnrollmentsService.findById.mockResolvedValue({
+        id: 1,
+        progress: 80,
+      });
+      await service.create({ enrollmentId: 1, fileUrl: '/certificates/1.pdf' });
+      const certificates = service.findAll();
+      expect(certificates).toHaveLength(1);
+    });
+  });
+
+  describe('findByEnrollment', () => {
+    it('should return certificates by enrollment', async () => {
+      mockEnrollmentsService.findById.mockResolvedValue({
+        id: 1,
+        progress: 80,
+      });
+      await service.create({ enrollmentId: 1, fileUrl: '/certificates/1.pdf' });
+      const certificates = service.findByEnrollment(1);
+      expect(certificates).toHaveLength(1);
     });
 
-    describe('update', () => {
-      it('should update a certificate', () => {
-        mockProgressService.findByUserAndCourse.mockReturnValue({
-          userId: 1,
-          courseId: 1,
-          level: LanguageLevel.A1,
-          percentage: 100,
-        });
-        const created = service.create(dto) as Certificate;
-        const updated = service.update(created.id, { userId: 2 });
-        expect(updated.userId).toBe(2);
-      });
+    it('should return empty array when no certificates', () => {
+      const certificates = service.findByEnrollment(999);
+      expect(certificates).toHaveLength(0);
+    });
+  });
 
-      it('should throw NotFoundException for non-existent', () => {
-        expect(() => service.update(999, { userId: 2 })).toThrow(NotFoundException);
+  describe('update', () => {
+    it('should update a certificate', async () => {
+      mockEnrollmentsService.findById.mockResolvedValue({
+        id: 1,
+        progress: 80,
       });
+      const created = await service.create({
+        enrollmentId: 1,
+        fileUrl: '/certificates/1.pdf',
+      });
+      const updated = service.update(created.id, { fileUrl: '/new/url.pdf' });
+      expect(updated.fileUrl).toBe('/new/url.pdf');
     });
 
-    describe('remove', () => {
-      it('should remove a certificate', () => {
-        mockProgressService.findByUserAndCourse.mockReturnValue({
-          userId: 1,
-          courseId: 1,
-          level: LanguageLevel.A1,
-          percentage: 100,
-        });
-        const created = service.create(dto) as Certificate;
-        const removed = service.remove(created.id);
-        expect(removed.id).toBe(created.id);
-        expect(service.findAll()).toHaveLength(0);
-      });
+    it('should throw NotFoundException for non-existent', () => {
+      expect(() => service.update(999, { fileUrl: '/new.pdf' })).toThrow(
+        NotFoundException,
+      );
+    });
+  });
 
-      it('should throw NotFoundException for non-existent', () => {
-        expect(() => service.remove(999)).toThrow(NotFoundException);
+  describe('remove', () => {
+    it('should remove a certificate', async () => {
+      mockEnrollmentsService.findById.mockResolvedValue({
+        id: 1,
+        progress: 80,
       });
+      const created = await service.create({
+        enrollmentId: 1,
+        fileUrl: '/certificates/1.pdf',
+      });
+      const removed = service.remove(created.id);
+      expect(removed.id).toBe(created.id);
+      expect(service.findAll()).toHaveLength(0);
+    });
+
+    it('should throw NotFoundException for non-existent', () => {
+      expect(() => service.remove(999)).toThrow(NotFoundException);
     });
   });
 });

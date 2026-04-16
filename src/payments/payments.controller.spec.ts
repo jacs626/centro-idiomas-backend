@@ -2,17 +2,24 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { PaymentsController } from './payments.controller';
 import { PaymentsService } from './payments.service';
 import { NotFoundException } from '@nestjs/common';
+import { CreatePaymentDto } from './dto/create-payment.dto/create-payment.dto';
 
 describe('PaymentsController', () => {
   let controller: PaymentsController;
   let service: PaymentsService;
 
-  const mockPayment = { id: 1, userId: 1, groupId: 1, amount: 100, type: 'matricula' as const, status: 'pending' as const, dueDate: '2024-01-01' };
+  const mockPayment: CreatePaymentDto & { id: number } = {
+    id: 1,
+    enrollmentId: 1,
+    amount: 100,
+    type: 'matricula',
+    status: 'pending',
+    dueDate: '2024-01-01',
+  };
 
   const mockPaymentsService = {
     findAll: jest.fn(),
-    findByUser: jest.fn(),
-    findByGroup: jest.fn(),
+    findByEnrollment: jest.fn(),
     findByStatus: jest.fn(),
     create: jest.fn(),
     update: jest.fn(),
@@ -40,17 +47,11 @@ describe('PaymentsController', () => {
     });
   });
 
-  describe('findByUser', () => {
-    it('should return payments by user', () => {
-      mockPaymentsService.findByUser.mockReturnValue([mockPayment]);
-      expect(controller.findByUser('1')).toEqual([mockPayment]);
-    });
-  });
-
-  describe('findByGroup', () => {
-    it('should return payments by group', () => {
-      mockPaymentsService.findByGroup.mockReturnValue([mockPayment]);
-      expect(controller.findByGroup('1')).toEqual([mockPayment]);
+  describe('findByEnrollment', () => {
+    it('should return payments by enrollment', () => {
+      mockPaymentsService.findByEnrollment.mockReturnValue([mockPayment]);
+      expect(controller.findByEnrollment('1')).toEqual([mockPayment]);
+      expect(mockPaymentsService.findByEnrollment).toHaveBeenCalledWith(1);
     });
   });
 
@@ -63,7 +64,13 @@ describe('PaymentsController', () => {
 
   describe('create', () => {
     it('should create a payment', () => {
-      const dto = { userId: 1, groupId: 1, amount: 100, type: 'matricula' as const, status: 'pending' as const, dueDate: '2024-01-01' };
+      const dto: CreatePaymentDto = {
+        enrollmentId: 1,
+        amount: 100,
+        type: 'matricula',
+        status: 'pending',
+        dueDate: '2024-01-01',
+      };
       mockPaymentsService.create.mockReturnValue(mockPayment);
       expect(controller.create(dto)).toEqual(mockPayment);
     });
@@ -77,8 +84,12 @@ describe('PaymentsController', () => {
     });
 
     it('should throw NotFoundException when not found', async () => {
-      mockPaymentsService.update = jest.fn().mockRejectedValue(new NotFoundException());
-      await expect(controller.update('999', {})).rejects.toThrow(NotFoundException);
+      mockPaymentsService.update = jest
+        .fn()
+        .mockRejectedValue(new NotFoundException());
+      await expect(
+        controller.update('999', { status: 'paid' }),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 
@@ -89,7 +100,9 @@ describe('PaymentsController', () => {
     });
 
     it('should throw NotFoundException when not found', async () => {
-      mockPaymentsService.remove = jest.fn().mockRejectedValue(new NotFoundException());
+      mockPaymentsService.remove = jest
+        .fn()
+        .mockRejectedValue(new NotFoundException());
       await expect(controller.remove('999')).rejects.toThrow(NotFoundException);
     });
   });

@@ -1,9 +1,9 @@
-import { IsNumber } from 'class-validator';
+import { IsNumber, IsString } from 'class-validator';
 
 export class CreateCertificateDto {
   @IsNumber()
-  userId!: number;
+  enrollmentId!: number;
 
-  @IsNumber()
-  courseId!: number;
+  @IsString()
+  fileUrl!: string;
 }

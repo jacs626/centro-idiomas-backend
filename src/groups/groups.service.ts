@@ -6,6 +6,10 @@ type Group = {
   id: number;
   name: string;
   courseId: number;
+  teacherId: number;
+  startDate: Date | string;
+  endDate: Date | string;
+  createdAt?: Date;
 };
 
 @Injectable()
@@ -17,9 +21,21 @@ export class GroupsService {
   }
 
   create(dto: CreateGroupDto) {
+    const startDate =
+      typeof dto.startDate === 'string'
+        ? new Date(dto.startDate)
+        : dto.startDate;
+    const endDate =
+      typeof dto.endDate === 'string' ? new Date(dto.endDate) : dto.endDate;
+
     const newGroup: Group = {
       id: Date.now(),
-      ...dto,
+      name: dto.name,
+      courseId: dto.courseId,
+      teacherId: dto.teacherId,
+      startDate,
+      endDate,
+      createdAt: new Date(),
     };
 
     this.groups.push(newGroup);
@@ -32,7 +48,21 @@ export class GroupsService {
       throw new NotFoundException(`Group with id ${id} not found`);
     }
 
-    this.groups[index] = { ...this.groups[index], ...dto };
+    const existingGroup = this.groups[index];
+    const updatedGroup = { ...existingGroup, ...dto };
+
+    if (dto.startDate) {
+      updatedGroup.startDate =
+        typeof dto.startDate === 'string'
+          ? new Date(dto.startDate)
+          : dto.startDate;
+    }
+    if (dto.endDate) {
+      updatedGroup.endDate =
+        typeof dto.endDate === 'string' ? new Date(dto.endDate) : dto.endDate;
+    }
+
+    this.groups[index] = updatedGroup;
     return this.groups[index];
   }
 

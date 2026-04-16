@@ -1,4 +1,4 @@
-import { IsString, IsNumber } from 'class-validator';
+import { IsString, IsNumber, IsDateString } from 'class-validator';
 
 export class CreateGroupDto {
   @IsString()
@@ -6,4 +6,13 @@ export class CreateGroupDto {
 
   @IsNumber()
   courseId!: number;
+
+  @IsNumber()
+  teacherId!: number;
+
+  @IsDateString()
+  startDate!: string;
+
+  @IsDateString()
+  endDate!: string;
 }

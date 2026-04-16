@@ -4,9 +4,8 @@ import { UpdateAttendanceDto } from './dto/update-attendance.dto/update-attendan
 
 type Attendance = {
   id: number;
-  userId: number;
-  groupId: number;
-  date: string;
+  enrollmentId: number;
+  date: Date | string;
   status: 'present' | 'absent' | 'late';
 };
 
@@ -21,7 +20,9 @@ export class AttendanceService {
   create(dto: CreateAttendanceDto) {
     const newAttendance: Attendance = {
       id: Date.now(),
-      ...dto,
+      enrollmentId: dto.enrollmentId,
+      date: new Date(dto.date),
+      status: dto.status,
     };
     this.attendances.push(newAttendance);
     return newAttendance;
@@ -44,15 +45,19 @@ export class AttendanceService {
     return this.attendances.splice(index, 1)[0];
   }
 
-  findByUser(userId: number) {
-    return this.attendances.filter((a) => a.userId === userId);
-  }
-
-  findByGroup(groupId: number) {
-    return this.attendances.filter((a) => a.groupId === groupId);
+  findByEnrollment(enrollmentId: number) {
+    return this.attendances.filter((a) => a.enrollmentId === enrollmentId);
   }
 
   findByDate(date: string) {
-    return this.attendances.filter((a) => a.date === date);
+    const dateObj = new Date(date);
+    return this.attendances.filter((a) => {
+      const attendanceDate =
+        typeof a.date === 'string' ? new Date(a.date) : a.date;
+      return (
+        attendanceDate.toISOString().split('T')[0] ===
+        dateObj.toISOString().split('T')[0]
+      );
+    });
   }
 }

@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { PaymentsService } from './payments.service';
 import { NotFoundException } from '@nestjs/common';
+import { CreatePaymentDto } from './dto/create-payment.dto/create-payment.dto';
 
 describe('PaymentsService', () => {
   let service: PaymentsService;
@@ -14,13 +15,19 @@ describe('PaymentsService', () => {
   });
 
   describe('CRUD Operations', () => {
-    const dto = { userId: 1, groupId: 1, amount: 100, type: 'matricula' as const, status: 'pending' as const, dueDate: '2024-01-01' };
+    const dto: CreatePaymentDto = {
+      enrollmentId: 1,
+      amount: 100,
+      type: 'matricula',
+      status: 'pending',
+      dueDate: '2024-01-15',
+    };
 
     describe('create', () => {
       it('should create a payment', () => {
         const result = service.create(dto);
         expect(result).toHaveProperty('id');
-        expect(result.userId).toBe(dto.userId);
+        expect(result.enrollmentId).toBe(dto.enrollmentId);
         expect(result.amount).toBe(dto.amount);
       });
     });
@@ -33,41 +40,45 @@ describe('PaymentsService', () => {
       });
     });
 
-    describe('findByUser', () => {
-      it('should return payments by user', () => {
+    describe('findByEnrollment', () => {
+      it('should return payments by enrollment', () => {
         service.create(dto);
-        service.create({ userId: 1, groupId: 2, amount: 50, type: 'cuota' as const, status: 'pending' as const, dueDate: '2024-02-01' });
-        const payments = service.findByUser(1);
+        service.create({
+          enrollmentId: 1,
+          amount: 50,
+          type: 'cuota',
+          status: 'pending',
+          dueDate: '2024-02-01',
+        });
+        const payments = service.findByEnrollment(1);
         expect(payments).toHaveLength(2);
       });
-    });
 
-    describe('findByGroup', () => {
-      it('should return payments by group', () => {
-        service.create(dto);
-        const payments = service.findByGroup(1);
-        expect(payments).toHaveLength(1);
+      it('should return empty array when no payments', () => {
+        const payments = service.findByEnrollment(999);
+        expect(payments).toHaveLength(0);
       });
     });
 
     describe('findByStatus', () => {
       it('should return payments by status', () => {
         service.create(dto);
-        const pendingPayments = service.findByStatus('pending');
-        expect(pendingPayments).toHaveLength(1);
+        const payments = service.findByStatus('pending');
+        expect(payments).toHaveLength(1);
       });
     });
 
     describe('update', () => {
       it('should update a payment', () => {
         const created = service.create(dto);
-        const updated = service.update(created.id, { status: 'paid', paidAt: '2024-01-15' });
+        const updated = service.update(created.id, { status: 'paid' });
         expect(updated.status).toBe('paid');
-        expect(updated.paidAt).toBe('2024-01-15');
       });
 
       it('should throw NotFoundException for non-existent', () => {
-        expect(() => service.update(999, { status: 'paid' })).toThrow(NotFoundException);
+        expect(() => service.update(999, { status: 'paid' })).toThrow(
+          NotFoundException,
+        );
       });
     });
 

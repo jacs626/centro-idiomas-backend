@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { EnrollmentsService } from './enrollments.service';
 import { NotFoundException } from '@nestjs/common';
+import { CreateEnrollmentDto } from './dto/create-enrollment.dto/create-enrollment.dto';
 
 describe('EnrollmentsService', () => {
   let service: EnrollmentsService;
@@ -14,7 +15,12 @@ describe('EnrollmentsService', () => {
   });
 
   describe('CRUD Operations', () => {
-    const dto = { userId: 1, groupId: 1, status: 'active' };
+    const dto: CreateEnrollmentDto = {
+      userId: 1,
+      groupId: 1,
+      status: 'active',
+      progress: 0,
+    };
 
     describe('create', () => {
       it('should create an enrollment', () => {
@@ -37,7 +43,12 @@ describe('EnrollmentsService', () => {
     describe('findByUser', () => {
       it('should return enrollments by user', () => {
         service.create(dto);
-        service.create({ userId: 1, groupId: 2, status: 'active' });
+        service.create({
+          userId: 1,
+          groupId: 2,
+          status: 'active',
+          progress: 0,
+        });
         const enrollments = service.findByUser(1);
         expect(enrollments).toHaveLength(2);
       });
@@ -56,6 +67,34 @@ describe('EnrollmentsService', () => {
       });
     });
 
+    describe('findByUserAndGroup', () => {
+      it('should return enrollments by user and group', () => {
+        service.create(dto);
+        service.create({
+          userId: 1,
+          groupId: 2,
+          status: 'active',
+          progress: 0,
+        });
+        service.create({
+          userId: 2,
+          groupId: 1,
+          status: 'active',
+          progress: 0,
+        });
+        const enrollments = service.findByUserAndGroup(1, 1);
+        expect(enrollments).toHaveLength(1);
+        expect(enrollments[0].userId).toBe(1);
+        expect(enrollments[0].groupId).toBe(1);
+      });
+
+      it('should return empty array when no match', () => {
+        service.create(dto);
+        const enrollments = service.findByUserAndGroup(999, 999);
+        expect(enrollments).toHaveLength(0);
+      });
+    });
+
     describe('update', () => {
       it('should update an enrollment', () => {
         const created = service.create(dto);
@@ -64,7 +103,9 @@ describe('EnrollmentsService', () => {
       });
 
       it('should throw NotFoundException for non-existent enrollment', () => {
-        expect(() => service.update(999, { status: 'test' })).toThrow(NotFoundException);
+        expect(() => service.update(999, { status: 'completed' })).toThrow(
+          NotFoundException,
+        );
       });
     });
 
