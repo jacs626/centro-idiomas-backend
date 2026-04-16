@@ -1,63 +1,87 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { CreateAttendanceDto } from './dto/create-attendance.dto/create-attendance.dto';
 import { UpdateAttendanceDto } from './dto/update-attendance.dto/update-attendance.dto';
-
-type Attendance = {
-  id: number;
-  enrollmentId: number;
-  date: Date | string;
-  status: 'present' | 'absent' | 'late';
-};
+import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class AttendanceService {
-  private attendances: Attendance[] = [];
+  constructor(private prisma: PrismaService) {}
 
-  findAll() {
-    return this.attendances;
-  }
+  async create(dto: CreateAttendanceDto) {
+    const enrollment = await this.prisma.enrollment.findUnique({
+      where: { id: dto.enrollmentId },
+    });
 
-  create(dto: CreateAttendanceDto) {
-    const newAttendance: Attendance = {
-      id: Date.now(),
-      enrollmentId: dto.enrollmentId,
-      date: new Date(dto.date),
-      status: dto.status,
-    };
-    this.attendances.push(newAttendance);
-    return newAttendance;
-  }
-
-  update(id: number, dto: UpdateAttendanceDto) {
-    const index = this.attendances.findIndex((a) => a.id === id);
-    if (index === -1) {
-      throw new NotFoundException(`Attendance with id ${id} not found`);
+    if (!enrollment) {
+      throw new NotFoundException('Enrollment no existe');
     }
-    this.attendances[index] = { ...this.attendances[index], ...dto };
-    return this.attendances[index];
-  }
 
-  remove(id: number) {
-    const index = this.attendances.findIndex((a) => a.id === id);
-    if (index === -1) {
-      throw new NotFoundException(`Attendance with id ${id} not found`);
+    const existing = await this.prisma.attendance.findFirst({
+      where: {
+        enrollmentId: dto.enrollmentId,
+        date: new Date(dto.date),
+      },
+    });
+
+    if (existing) {
+      throw new BadRequestException('Asistencia ya registrada para este día');
     }
-    return this.attendances.splice(index, 1)[0];
+
+    return this.prisma.attendance.create({
+      data: {
+        enrollmentId: dto.enrollmentId,
+        date: new Date(dto.date),
+        status: dto.status,
+      },
+    });
   }
 
-  findByEnrollment(enrollmentId: number) {
-    return this.attendances.filter((a) => a.enrollmentId === enrollmentId);
+  async findByEnrollment(enrollmentId: number) {
+    return this.prisma.attendance.findMany({
+      where: { enrollmentId },
+      orderBy: { date: 'asc' },
+    });
   }
 
-  findByDate(date: string) {
-    const dateObj = new Date(date);
-    return this.attendances.filter((a) => {
-      const attendanceDate =
-        typeof a.date === 'string' ? new Date(a.date) : a.date;
-      return (
-        attendanceDate.toISOString().split('T')[0] ===
-        dateObj.toISOString().split('T')[0]
-      );
+  async findByGroup(groupId: number) {
+    return this.prisma.attendance.findMany({
+      where: {
+        enrollment: {
+          groupId,
+        },
+      },
+      include: {
+        enrollment: {
+          include: {
+            user: {
+              select: { id: true, name: true },
+            },
+          },
+        },
+      },
+      orderBy: { date: 'asc' },
+    });
+  }
+
+  async update(id: number, dto: UpdateAttendanceDto) {
+    const attendance = await this.prisma.attendance.findUnique({
+      where: { id },
+    });
+
+    if (!attendance) {
+      throw new NotFoundException('Attendance no encontrada');
+    }
+
+    return this.prisma.attendance.update({
+      where: { id },
+      data: {
+        status: dto.status,
+        date: dto.date ? new Date(dto.date) : undefined,
+      },
     });
   }
 }

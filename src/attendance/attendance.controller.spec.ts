@@ -8,20 +8,18 @@ describe('AttendanceController', () => {
   let controller: AttendanceController;
   let service: AttendanceService;
 
-  const mockAttendance: CreateAttendanceDto & { id: number } = {
+  const mockAttendance = {
     id: 1,
     enrollmentId: 1,
-    date: '2024-01-01',
+    date: new Date('2024-01-01'),
     status: 'present',
   };
 
   const mockAttendanceService = {
-    findAll: jest.fn(),
-    findByEnrollment: jest.fn(),
-    findByDate: jest.fn(),
     create: jest.fn(),
     update: jest.fn(),
-    remove: jest.fn(),
+    findByEnrollment: jest.fn(),
+    findByGroup: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -40,74 +38,68 @@ describe('AttendanceController', () => {
     jest.clearAllMocks();
   });
 
-  describe('findAll', () => {
-    it('should return all attendances', () => {
-      mockAttendanceService.findAll.mockReturnValue([mockAttendance]);
-      expect(controller.findAll()).toEqual([mockAttendance]);
-    });
-  });
-
-  describe('findByEnrollment', () => {
-    it('should return attendances by enrollment', () => {
-      mockAttendanceService.findByEnrollment.mockReturnValue([mockAttendance]);
-      expect(controller.findByEnrollment('1')).toEqual([mockAttendance]);
-      expect(mockAttendanceService.findByEnrollment).toHaveBeenCalledWith(1);
-    });
-  });
-
-  describe('findByDate', () => {
-    it('should return attendances by date', () => {
-      mockAttendanceService.findByDate.mockReturnValue([mockAttendance]);
-      expect(controller.findByDate('2024-01-01')).toEqual([mockAttendance]);
-    });
-  });
-
   describe('create', () => {
-    it('should create an attendance', () => {
+    it('should create an attendance', async () => {
       const dto: CreateAttendanceDto = {
         enrollmentId: 1,
         date: '2024-01-01',
         status: 'present',
       };
-      mockAttendanceService.create.mockReturnValue(mockAttendance);
-      expect(controller.create(dto)).toEqual(mockAttendance);
+      mockAttendanceService.create.mockResolvedValue(mockAttendance);
+
+      const result = await controller.create(dto);
+
+      expect(result).toEqual(mockAttendance);
+      expect(mockAttendanceService.create).toHaveBeenCalledWith(dto);
     });
   });
 
   describe('update', () => {
-    it('should update an attendance', () => {
-      const dto = { status: 'absent' as const };
-      mockAttendanceService.update.mockReturnValue({
-        ...mockAttendance,
-        ...dto,
-      });
-      expect(controller.update('1', dto)).toEqual({
-        ...mockAttendance,
-        ...dto,
-      });
+    it('should update an attendance', async () => {
+      const dto: { status: 'present' | 'absent' | 'late' } = {
+        status: 'absent',
+      };
+      const updated = { ...mockAttendance, ...dto };
+      mockAttendanceService.update.mockResolvedValue(updated);
+
+      const result = await controller.update(1, dto);
+
+      expect(result).toEqual(updated);
+      expect(mockAttendanceService.update).toHaveBeenCalledWith(1, dto);
     });
 
     it('should throw NotFoundException when not found', async () => {
-      mockAttendanceService.update = jest
-        .fn()
-        .mockRejectedValue(new NotFoundException());
+      mockAttendanceService.update.mockRejectedValue(
+        new NotFoundException('Attendance no encontrada'),
+      );
+
       await expect(
-        controller.update('999', { status: 'absent' }),
+        controller.update(999, { status: 'absent' }),
       ).rejects.toThrow(NotFoundException);
     });
   });
 
-  describe('remove', () => {
-    it('should remove an attendance', () => {
-      mockAttendanceService.remove.mockReturnValue(mockAttendance);
-      expect(controller.remove('1')).toEqual(mockAttendance);
-    });
+  describe('findByEnrollment', () => {
+    it('should return attendances by enrollment', async () => {
+      mockAttendanceService.findByEnrollment.mockResolvedValue([
+        mockAttendance,
+      ]);
 
-    it('should throw NotFoundException when not found', async () => {
-      mockAttendanceService.remove = jest
-        .fn()
-        .mockRejectedValue(new NotFoundException());
-      await expect(controller.remove('999')).rejects.toThrow(NotFoundException);
+      const result = await controller.findByEnrollment(1);
+
+      expect(result).toEqual([mockAttendance]);
+      expect(mockAttendanceService.findByEnrollment).toHaveBeenCalledWith(1);
+    });
+  });
+
+  describe('findByGroup', () => {
+    it('should return attendances by group', async () => {
+      mockAttendanceService.findByGroup.mockResolvedValue([mockAttendance]);
+
+      const result = await controller.findByGroup(1);
+
+      expect(result).toEqual([mockAttendance]);
+      expect(mockAttendanceService.findByGroup).toHaveBeenCalledWith(1);
     });
   });
 });

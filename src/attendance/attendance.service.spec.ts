@@ -1,94 +1,148 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AttendanceService } from './attendance.service';
-import { NotFoundException } from '@nestjs/common';
-import { CreateAttendanceDto } from './dto/create-attendance.dto/create-attendance.dto';
+import { PrismaService } from '../prisma/prisma.service';
+import { NotFoundException, BadRequestException } from '@nestjs/common';
 
 describe('AttendanceService', () => {
   let service: AttendanceService;
+  let prisma: PrismaService;
+
+  const mockPrisma = {
+    attendance: {
+      create: jest.fn(),
+      findUnique: jest.fn(),
+      findFirst: jest.fn(),
+      findMany: jest.fn(),
+      update: jest.fn(),
+    },
+    enrollment: {
+      findUnique: jest.fn(),
+    },
+  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [AttendanceService],
+      providers: [
+        AttendanceService,
+        { provide: PrismaService, useValue: mockPrisma },
+      ],
     }).compile();
 
     service = module.get<AttendanceService>(AttendanceService);
+    prisma = module.get<PrismaService>(PrismaService);
   });
 
-  describe('CRUD Operations', () => {
-    const dto: CreateAttendanceDto = {
-      enrollmentId: 1,
-      date: '2024-01-01',
-      status: 'present',
-    };
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
 
-    describe('create', () => {
-      it('should create an attendance', () => {
-        const result = service.create(dto);
-        expect(result).toHaveProperty('id');
-        expect(result.enrollmentId).toBe(dto.enrollmentId);
-        expect(result.status).toBe(dto.status);
-      });
+  describe('create', () => {
+    it('should create an attendance', async () => {
+      const dto = {
+        enrollmentId: 1,
+        date: '2024-01-01',
+        status: 'present' as const,
+      };
+      const mockAttendance = {
+        id: 1,
+        ...dto,
+        date: new Date('2024-01-01'),
+      };
+
+      mockPrisma.enrollment.findUnique.mockResolvedValue({ id: 1 });
+      mockPrisma.attendance.findFirst.mockResolvedValue(null);
+      mockPrisma.attendance.create.mockResolvedValue(mockAttendance);
+
+      const result = await service.create(dto);
+
+      expect(result).toEqual(mockAttendance);
     });
 
-    describe('findAll', () => {
-      it('should return all attendances', () => {
-        service.create(dto);
-        const attendances = service.findAll();
-        expect(attendances).toHaveLength(1);
-      });
+    it('should throw NotFoundException when enrollment not found', async () => {
+      const dto = {
+        enrollmentId: 999,
+        date: '2024-01-01',
+        status: 'present' as const,
+      };
+
+      mockPrisma.enrollment.findUnique.mockResolvedValue(null);
+
+      await expect(service.create(dto)).rejects.toThrow(NotFoundException);
     });
 
-    describe('findByEnrollment', () => {
-      it('should return attendances by enrollment', () => {
-        service.create(dto);
-        service.create({
+    it('should throw BadRequestException when attendance already exists', async () => {
+      const dto = {
+        enrollmentId: 1,
+        date: '2024-01-01',
+        status: 'present' as const,
+      };
+
+      mockPrisma.enrollment.findUnique.mockResolvedValue({ id: 1 });
+      mockPrisma.attendance.findFirst.mockResolvedValue({ id: 1 });
+
+      await expect(service.create(dto)).rejects.toThrow(BadRequestException);
+    });
+  });
+
+  describe('update', () => {
+    it('should update an attendance', async () => {
+      const mockAttendance = {
+        id: 1,
+        enrollmentId: 1,
+        date: new Date('2024-01-01'),
+        status: 'present',
+      };
+      const dto = { status: 'absent' as const };
+
+      mockPrisma.attendance.findUnique.mockResolvedValue(mockAttendance);
+      mockPrisma.attendance.update.mockResolvedValue({
+        ...mockAttendance,
+        ...dto,
+      });
+
+      const result = await service.update(1, dto);
+
+      expect(result.status).toBe('absent');
+    });
+
+    it('should throw NotFoundException when attendance not found', async () => {
+      mockPrisma.attendance.findUnique.mockResolvedValue(null);
+
+      await expect(service.update(999, { status: 'absent' })).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+  });
+
+  describe('findByEnrollment', () => {
+    it('should return attendances by enrollment', async () => {
+      const mockAttendances = [
+        { id: 1, enrollmentId: 1, date: new Date(), status: 'present' },
+      ];
+      mockPrisma.attendance.findMany.mockResolvedValue(mockAttendances);
+
+      const result = await service.findByEnrollment(1);
+
+      expect(result).toEqual(mockAttendances);
+    });
+  });
+
+  describe('findByGroup', () => {
+    it('should return attendances by group', async () => {
+      const mockAttendances = [
+        {
+          id: 1,
           enrollmentId: 1,
-          date: '2024-01-02',
-          status: 'absent',
-        });
-        const attendances = service.findByEnrollment(1);
-        expect(attendances).toHaveLength(2);
-      });
+          date: new Date(),
+          status: 'present',
+          enrollment: { user: { id: 1, name: 'John' } },
+        },
+      ];
+      mockPrisma.attendance.findMany.mockResolvedValue(mockAttendances);
 
-      it('should return empty array when no attendances', () => {
-        const attendances = service.findByEnrollment(999);
-        expect(attendances).toHaveLength(0);
-      });
-    });
+      const result = await service.findByGroup(1);
 
-    describe('findByDate', () => {
-      it('should return attendances by date', () => {
-        service.create(dto);
-        const attendances = service.findByDate('2024-01-01');
-        expect(attendances).toHaveLength(1);
-      });
-    });
-
-    describe('update', () => {
-      it('should update an attendance', () => {
-        const created = service.create(dto);
-        const updated = service.update(created.id, { status: 'absent' });
-        expect(updated.status).toBe('absent');
-      });
-
-      it('should throw NotFoundException for non-existent', () => {
-        expect(() => service.update(999, { status: 'absent' })).toThrow(
-          NotFoundException,
-        );
-      });
-    });
-
-    describe('remove', () => {
-      it('should remove an attendance', () => {
-        const created = service.create(dto);
-        const removed = service.remove(created.id);
-        expect(removed.id).toBe(created.id);
-        expect(service.findAll()).toHaveLength(0);
-      });
-
-      it('should throw NotFoundException for non-existent', () => {
-        expect(() => service.remove(999)).toThrow(NotFoundException);
-      });
+      expect(result).toEqual(mockAttendances);
     });
   });
 });

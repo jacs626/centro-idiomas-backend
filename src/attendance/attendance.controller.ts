@@ -1,12 +1,11 @@
 import {
   Controller,
-  Get,
   Post,
-  Body,
+  Get,
   Patch,
-  Delete,
+  Body,
   Param,
-  Query,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { AttendanceService } from './attendance.service';
 import { CreateAttendanceDto } from './dto/create-attendance.dto/create-attendance.dto';
@@ -16,33 +15,26 @@ import { UpdateAttendanceDto } from './dto/update-attendance.dto/update-attendan
 export class AttendanceController {
   constructor(private readonly attendanceService: AttendanceService) {}
 
-  @Get()
-  findAll() {
-    return this.attendanceService.findAll();
-  }
-
-  @Get('by-enrollment')
-  findByEnrollment(@Query('enrollmentId') enrollmentId: string) {
-    return this.attendanceService.findByEnrollment(Number(enrollmentId));
-  }
-
-  @Get('by-date')
-  findByDate(@Query('date') date: string) {
-    return this.attendanceService.findByDate(date);
-  }
-
   @Post()
   create(@Body() dto: CreateAttendanceDto) {
     return this.attendanceService.create(dto);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() dto: UpdateAttendanceDto) {
-    return this.attendanceService.update(Number(id), dto);
+  update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateAttendanceDto,
+  ) {
+    return this.attendanceService.update(id, dto);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.attendanceService.remove(Number(id));
+  @Get('enrollment/:id')
+  findByEnrollment(@Param('id', ParseIntPipe) id: number) {
+    return this.attendanceService.findByEnrollment(id);
+  }
+
+  @Get('group/:id')
+  findByGroup(@Param('id', ParseIntPipe) id: number) {
+    return this.attendanceService.findByGroup(id);
   }
 }
