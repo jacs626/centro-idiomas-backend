@@ -1,51 +1,45 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
 import { CreateCourseDto } from './dto/create-course.dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto/update-course.dto';
 
-type Course = {
-  id: number;
-  name: string;
-  level: string;
-  description?: string;
-  createdAt?: Date;
-};
-
 @Injectable()
 export class CoursesService {
-  private courses: Course[] = [];
+  constructor(private prisma: PrismaService) {}
 
-  findAll() {
-    return this.courses;
+  async findAll() {
+    return this.prisma.course.findMany();
   }
 
-  create(dto: CreateCourseDto) {
-    const newCourse: Course = {
-      id: Date.now(),
-      ...dto,
-      createdAt: new Date(),
-    };
-
-    this.courses.push(newCourse);
-    return newCourse;
+  async findOne(id: number) {
+    return this.prisma.course.findUnique({
+      where: { id },
+    });
   }
 
-  update(id: number, dto: UpdateCourseDto) {
-    const index = this.courses.findIndex((c) => c.id === id);
-    if (index === -1) {
+  async create(dto: CreateCourseDto) {
+    return this.prisma.course.create({
+      data: dto,
+    });
+  }
+
+  async update(id: number, dto: UpdateCourseDto) {
+    const course = await this.prisma.course.findUnique({ where: { id } });
+    if (!course) {
       throw new NotFoundException(`Course with id ${id} not found`);
     }
-
-    this.courses[index] = { ...this.courses[index], ...dto };
-    return this.courses[index];
+    return this.prisma.course.update({
+      where: { id },
+      data: dto,
+    });
   }
 
-  remove(id: number) {
-    const index = this.courses.findIndex((c) => c.id === id);
-    if (index === -1) {
+  async remove(id: number) {
+    const course = await this.prisma.course.findUnique({ where: { id } });
+    if (!course) {
       throw new NotFoundException(`Course with id ${id} not found`);
     }
-
-    const deleted = this.courses.splice(index, 1);
-    return deleted[0];
+    await this.prisma.course.delete({ where: { id } });
+    return course;
   }
 }

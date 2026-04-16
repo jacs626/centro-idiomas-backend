@@ -1,82 +1,60 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
 import { CreateGroupDto } from './dto/create-group.dto/create-group.dto';
 import { UpdateGroupDto } from './dto/update-group.dto/update-group.dto';
 
-type Group = {
-  id: number;
-  name: string;
-  courseId: number;
-  teacherId: number;
-  startDate: Date | string;
-  endDate: Date | string;
-  createdAt?: Date;
-};
-
 @Injectable()
 export class GroupsService {
-  private groups: Group[] = [];
+  constructor(private prisma: PrismaService) {}
 
-  findAll() {
-    return this.groups;
+  async findAll() {
+    return this.prisma.group.findMany({
+      include: { course: true, teacher: true },
+    });
   }
 
-  create(dto: CreateGroupDto) {
-    const startDate =
-      typeof dto.startDate === 'string'
-        ? new Date(dto.startDate)
-        : dto.startDate;
-    const endDate =
-      typeof dto.endDate === 'string' ? new Date(dto.endDate) : dto.endDate;
-
-    const newGroup: Group = {
-      id: Date.now(),
-      name: dto.name,
-      courseId: dto.courseId,
-      teacherId: dto.teacherId,
-      startDate,
-      endDate,
-      createdAt: new Date(),
-    };
-
-    this.groups.push(newGroup);
-    return newGroup;
+  async create(dto: CreateGroupDto) {
+    return this.prisma.group.create({
+      data: {
+        ...dto,
+        startDate: new Date(dto.startDate),
+        endDate: new Date(dto.endDate),
+      },
+      include: { course: true, teacher: true },
+    });
   }
 
-  update(id: number, dto: UpdateGroupDto) {
-    const index = this.groups.findIndex((g) => g.id === id);
-    if (index === -1) {
+  async update(id: number, dto: UpdateGroupDto) {
+    const group = await this.prisma.group.findUnique({ where: { id } });
+    if (!group) {
       throw new NotFoundException(`Group with id ${id} not found`);
     }
-
-    const existingGroup = this.groups[index];
-    const updatedGroup = { ...existingGroup, ...dto };
-
-    if (dto.startDate) {
-      updatedGroup.startDate =
-        typeof dto.startDate === 'string'
-          ? new Date(dto.startDate)
-          : dto.startDate;
-    }
-    if (dto.endDate) {
-      updatedGroup.endDate =
-        typeof dto.endDate === 'string' ? new Date(dto.endDate) : dto.endDate;
-    }
-
-    this.groups[index] = updatedGroup;
-    return this.groups[index];
+    return this.prisma.group.update({
+      where: { id },
+      data: dto,
+      include: { course: true, teacher: true },
+    });
   }
 
-  remove(id: number) {
-    const index = this.groups.findIndex((g) => g.id === id);
-    if (index === -1) {
+  async remove(id: number) {
+    const group = await this.prisma.group.findUnique({ where: { id } });
+    if (!group) {
       throw new NotFoundException(`Group with id ${id} not found`);
     }
-
-    const deleted = this.groups.splice(index, 1);
-    return deleted[0];
+    await this.prisma.group.delete({ where: { id } });
+    return group;
   }
 
-  findByCourse(courseId: number) {
-    return this.groups.filter((g) => g.courseId === courseId);
+  async findByCourse(courseId: number) {
+    return this.prisma.group.findMany({
+      where: { courseId },
+      include: { course: true, teacher: true },
+    });
+  }
+
+  async findById(id: number) {
+    return this.prisma.group.findMany({
+      where: { id },
+    });
   }
 }
