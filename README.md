@@ -2,6 +2,35 @@
 
 API REST para la gestión integral de un centro de idiomas.
 
+## 🌐 Demo en Producción
+
+🔗 Frontend:
+https://centro-idiomas-frontend.vercel.app
+🔗 Backend API:
+https://centro-idiomas-backend.onrender.com
+
+## 🔐 Credenciales de Prueba
+
+Admin:
+admin@test.com / 123456
+
+Profesor:
+profe1@test.com / 123456
+
+Alumno:
+alumno1@test.com / 123456
+
+## ⚡ Endpoints para Test Rápido
+
+POST /auth/login
+GET /courses
+GET /enrollments/my-progress
+GET /reports/summary
+
+## 🧪 Nota
+
+El sistema cuenta con datos precargados mediante seed para facilitar la evaluación.
+
 ## 🛠️ Tecnologías
 
 - **NestJS** - Framework Node.js (TypeScript)
@@ -111,14 +140,14 @@ Filtros disponibles: `?groupId=` y `?status=` (pending/paid/late)
 
 ## 👤 Gestión de Usuarios
 
-| Método | Endpoint     | Rol   | Descripción                  |
-| ------ | ------------ | ----- | ---------------------------- |
+| Método | Endpoint     | Rol   | Descripción                 |
+| ------ | ------------ | ----- | --------------------------- |
 | GET    | `/users`     | Admin | Todos los usuarios (?role=) |
-| POST   | `/users`     | Admin | Crear usuario                |
-| GET    | `/users/:id` | Admin | Ver usuario                  |
+| POST   | `/users`     | Admin | Crear usuario               |
+| GET    | `/users/:id` | Admin | Ver usuario                 |
 | PATCH  | `/users/:id` | Admin | Actualizar usuario          |
-| DELETE | `/users/:id` | Admin | Eliminar usuario             |
-| DELETE | `/users/:id` | Admin | Eliminar usuario   |
+| DELETE | `/users/:id` | Admin | Eliminar usuario            |
+| DELETE | `/users/:id` | Admin | Eliminar usuario            |
 
 ## 🔔 Endpoints de Notificaciones
 
