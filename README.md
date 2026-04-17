@@ -107,6 +107,19 @@ npm run start:prod
 | PATCH | `/users/:id` | Admin | Actualizar usuario |
 | DELETE | `/users/:id` | Admin | Eliminar usuario |
 
+## 🔔 Endpoints de Notificaciones
+
+| Método | Endpoint | Rol | Descripción |
+|-------|----------|-----|-------------|
+| GET | `/notifications/my` | Todos | Mis notificaciones |
+| GET | `/notifications/badge` | Todos | Contador de notificaciones |
+
+### Tipos de notificaciones
+- **payment**: Pagos vencidos/pendientes
+- **certificate**: Certificados disponibles
+- **progress**: Bajo progreso (< 50%)
+- **enrollment**: Alumnos completados
+
 ## 🔒 Roles
 
 - **admin** - Acceso completo
