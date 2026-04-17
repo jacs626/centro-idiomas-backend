@@ -43,24 +43,29 @@ npm run start:prod
 
 ## 👥 Endpoints de Grupos
 
-| Método | Endpoint      | Rol            | Descripción      |
-| ------ | ------------- | -------------- | ---------------- |
-| GET    | `/groups`     | Admin/Profesor | Listar grupos    |
-| POST   | `/groups`     | Admin          | Crear grupo      |
-| GET    | `/groups/:id` | Todos          | Ver grupo        |
-| PATCH  | `/groups/:id` | Admin          | Actualizar grupo |
-| DELETE | `/groups/:id` | Admin          | Eliminar grupo   |
+| Método | Endpoint            | Rol            | Descripción       |
+| ------ | ------------------- | -------------- | ----------------- |
+| GET    | `/groups`           | Admin/Profesor | Listar grupos     |
+| GET    | `/groups/teachers`  | Admin          | Listar profesores |
+| GET    | `/groups/by-course` | Admin/Profesor | Grupos por curso  |
+| POST   | `/groups`           | Admin          | Crear grupo       |
+| GET    | `/groups/:id`       | Todos          | Ver grupo         |
+| PATCH  | `/groups/:id`       | Admin          | Actualizar grupo  |
+| DELETE | `/groups/:id`       | Admin          | Eliminar grupo    |
 
 ## 🧑‍🎓 Endpoints de Matrículas
 
-| Método | Endpoint                           | Rol            | Descripción                |
-| ------ | ---------------------------------- | -------------- | -------------------------- |
-| GET    | `/enrollments`                     | Admin/Profesor | Todas las inscripciones    |
-| POST   | `/enrollments`                     | Admin          | Inscribir alumno           |
-| PATCH  | `/enrollments/:id`                 | Admin/Profesor | Actualizar progreso/estado |
-| GET    | `/enrollments/by-group?groupId=`   | Admin/Profesor | Alumnos por grupo          |
-| GET    | `/enrollments/by-course?courseId=` | Admin/Profesor | Alumnos por curso          |
-| GET    | `/enrollments/my-progress`         | Alumno         | Mi progreso                |
+| Método | Endpoint                         | Rol              | Descripción                |
+| ------ | -------------------------------- | ---------------- | -------------------------- |
+| GET    | `/enrollments`                   | Admin/Profesor\* | Todas las inscripciones    |
+| POST   | `/enrollments`                   | Admin            | Inscribir alumno           |
+| PATCH  | `/enrollments/:id`               | Admin            | Actualizar progreso/estado |
+| GET    | `/enrollments/by-group?groupId=` | Admin/Profesor\* | Alumnos por grupo          |
+| GET    | `/enrollments/by-user?userId=`   | Admin            | Matrículas por usuario     |
+| GET    | `/enrollments/progress/:groupId` | Todos            | Progreso por grupo         |
+| GET    | `/enrollments/my-progress`       | Alumno           | Mi progreso                |
+
+\*Profesor solo ve inscripciones de sus grupos
 
 ## 📅 Endpoints de Asistencia
 
@@ -73,12 +78,17 @@ npm run start:prod
 
 ## 💰 Endpoints de Pagos
 
-| Método | Endpoint                | Rol            | Descripción        |
-| ------ | ----------------------- | -------------- | ------------------ |
-| GET    | `/payments`             | Admin/Profesor | Todos los pagos    |
-| POST   | `/payments`             | Admin          | Crear pago         |
-| PATCH  | `/payments/:id/pay`     | Admin          | Marcar como pagado |
-| GET    | `/payments/my-payments` | Alumno         | Mis pagos          |
+| Método | Endpoint                      | Rol            | Descripción               |
+| ------ | ----------------------------- | -------------- | ------------------------- |
+| GET    | `/payments`                   | Admin          | Todos los pagos (filtros) |
+| POST   | `/payments`                   | Admin          | Crear pago                |
+| PATCH  | `/payments/:id/pay`           | Admin          | Marcar como pagado        |
+| GET    | `/payments/by-user`           | Admin          | Pagos por usuario         |
+| GET    | `/payments/my-payments`       | Alumno         | Mis pagos                 |
+| GET    | `/payments/by-enrollment/:id` | Admin/Profesor | Pagos por matrícula       |
+| GET    | `/payments/group/:id`         | Admin/Profesor | Pagos por grupo           |
+
+Filtros disponibles: `?groupId=` y `?status=` (pending/paid/late)
 
 ## 🧾 Endpoints de Certificados
 
@@ -91,11 +101,13 @@ npm run start:prod
 
 ## 📊 Endpoints de Reportes
 
-| Método | Endpoint             | Rol            | Descripción        |
-| ------ | -------------------- | -------------- | ------------------ |
-| GET    | `/reports/summary`   | Admin/Profesor | Resumen global     |
-| GET    | `/reports/groups`    | Admin/Profesor | Resumen por grupos |
-| GET    | `/reports/group/:id` | Admin/Profesor | Reporte detallado  |
+| Método | Endpoint                        | Rol   | Descripción         |
+| ------ | ------------------------------- | ----- | ------------------- |
+| GET    | `/reports/summary`              | Admin | Resumen global      |
+| GET    | `/reports/groups`               | Admin | Resumen por grupos  |
+| GET    | `/reports/group/:id`            | Admin | Reporte detallado   |
+| GET    | `/reports/retention/global`     | Admin | Retención global    |
+| GET    | `/reports/retention/course/:id` | Admin | Retención por curso |
 
 ## 👤 Gestión de Usuarios
 
@@ -121,11 +133,17 @@ npm run start:prod
 - **progress**: Bajo progreso (< 50%)
 - **enrollment**: Alumnos completados
 
-## 🔒 Roles
+## 🔒 Roles y Permisos
 
-- **admin** - Acceso completo
-- **profesor** - Gestiona sus grupos y estudiantes
-- **alumno** - Acceso restringido a sus datos
+| Recurso      | Admin | Profesor   | Alumno    |
+| ------------ | ----- | ---------- | --------- |
+| Cursos       | ✔     | ⚠️ propios | ✔ propios |
+| Grupos       | ✔     | ✔ propios  | ✔ propios |
+| Matrículas   | ✔     | ❌         | ❌        |
+| Asistencia   | ✔     | ✔ propios  | ✔ propia  |
+| Pagos        | ✔     | ❌         | ✔ propios |
+| Certificados | ✔     | ✔ generar  | ✔ propios |
+| Reportes     | ✔     | ❌         | ❌        |
 
 ## ⭐ Funcionalidad Extra: Sistema de Notificaciones
 

@@ -60,6 +60,7 @@ export class EnrollmentsController {
   @Roles('alumno')
   getMyProgress(@Req() req: RequestWithUser) {
     console.log('[getMyProgress] userId:', req.user.sub);
+    console.log('[getMyProgress] role:', req.user.role);
     return this.enrollmentsService.getProgressByUser(req.user.sub);
   }
 
