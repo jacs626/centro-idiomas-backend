@@ -111,12 +111,13 @@ Filtros disponibles: `?groupId=` y `?status=` (pending/paid/late)
 
 ## 👤 Gestión de Usuarios
 
-| Método | Endpoint     | Rol   | Descripción        |
-| ------ | ------------ | ----- | ------------------ |
-| GET    | `/users`     | Admin | Todos los usuarios |
-| POST   | `/users`     | Admin | Crear usuario      |
-| GET    | `/users/:id` | Admin | Ver usuario        |
-| PATCH  | `/users/:id` | Admin | Actualizar usuario |
+| Método | Endpoint     | Rol   | Descripción                  |
+| ------ | ------------ | ----- | ---------------------------- |
+| GET    | `/users`     | Admin | Todos los usuarios (?role=) |
+| POST   | `/users`     | Admin | Crear usuario                |
+| GET    | `/users/:id` | Admin | Ver usuario                  |
+| PATCH  | `/users/:id` | Admin | Actualizar usuario          |
+| DELETE | `/users/:id` | Admin | Eliminar usuario             |
 | DELETE | `/users/:id` | Admin | Eliminar usuario   |
 
 ## 🔔 Endpoints de Notificaciones
