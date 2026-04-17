@@ -20,12 +20,13 @@ export class CoursesService {
         },
       },
     });
-    
+
     const courses = enrollments.map((e) => e.group.course);
     const uniqueCourses = courses.filter(
-      (course, index, self) => index === self.findIndex((c) => c.id === course.id)
+      (course, index, self) =>
+        index === self.findIndex((c) => c.id === course.id),
     );
-    
+
     return uniqueCourses;
   }
 
@@ -39,15 +40,15 @@ export class CoursesService {
     const course = await this.prisma.course.findUnique({
       where: { id },
     });
-    
+
     if (!course) {
       throw new NotFoundException(`Course with id ${id} not found`);
     }
-    
+
     if (user.role === 'admin') {
       return course;
     }
-    
+
     const enrollment = await this.prisma.enrollment.findFirst({
       where: {
         userId: user.sub,
@@ -55,11 +56,11 @@ export class CoursesService {
         status: { not: 'dropped' },
       },
     });
-    
+
     if (!enrollment) {
       throw new NotFoundException(`Course with id ${id} not found`);
     }
-    
+
     return course;
   }
 

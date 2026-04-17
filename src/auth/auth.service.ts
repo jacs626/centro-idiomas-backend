@@ -13,8 +13,6 @@ export class AuthService {
   ) {}
 
   async register(dto: RegisterDto) {
-    const role = dto.role || 'alumno';
-
     const existing = await this.usersService.findByEmail(dto.email);
     if (existing) {
       throw new UnauthorizedException('Email already in use');

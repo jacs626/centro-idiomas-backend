@@ -47,7 +47,10 @@ export class EnrollmentsController {
   ) {
     const finalUserId = userId || String(req.user.sub);
     console.log('[getProgress] userId:', finalUserId, 'groupId:', groupId);
-    return this.enrollmentsService.getProgressByUserAndGroup(Number(finalUserId), groupId);
+    return this.enrollmentsService.getProgressByUserAndGroup(
+      Number(finalUserId),
+      groupId,
+    );
   }
 
   @Get('my-progress')
