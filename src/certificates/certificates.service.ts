@@ -171,30 +171,122 @@ export class CertificatesService {
   }
 
   private generatePdf(enrollment: any, res: Response) {
-    const doc = new PDFDocument();
+    const doc = new PDFDocument({
+      size: 'A4',
+      margins: { top: 50, bottom: 50, left: 60, right: 60 },
+    });
 
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader(
       'Content-Disposition',
-      `attachment; filename=cert-${enrollment.id}.pdf`,
+      `attachment; filename=certificado-${enrollment.user.name.replace(/\s+/g, '-')}-${enrollment.group.course.name}.pdf`,
     );
 
     doc.pipe(res);
 
-    doc.fontSize(22).text('CERTIFICADO', { align: 'center' });
+    const pageHeight = doc.page.height;
+    const pageWidth = doc.page.width;
 
-    doc.moveDown();
-    doc.fontSize(14).text(`Alumno: ${enrollment.user.name}`);
-    doc.text(`Curso: ${enrollment.group.course.name}`);
-    doc.text(`Grupo: ${enrollment.group.name}`);
-    doc.text(`Progreso: ${enrollment.progress}%`);
+    // Fondo
+    doc.fillColor('#f8fafc').rect(0, 0, pageWidth, pageHeight).fill();
 
-    doc.moveDown();
-    doc.text('Ha completado el curso satisfactoriamente.');
+    // Borde exterior
+    doc
+      .rect(10, 10, pageWidth - 20, pageHeight - 20)
+      .lineWidth(3)
+      .stroke('#4f46e5');
+    doc
+      .rect(18, 18, pageWidth - 36, pageHeight - 36)
+      .lineWidth(1)
+      .stroke('#c7d2fe');
 
-    doc.moveDown();
-    doc.text(`Fecha: ${new Date().toLocaleDateString()}`);
-    doc.text(`Código: CERT-${enrollment.id}`);
+    // Header
+    doc.rect(18, 18, pageWidth - 36, 100).fill('#4f46e5');
+    doc
+      .fontSize(38)
+      .fillColor('#ffffff')
+      .text('CERTIFICADO', { align: 'center', y: 55 });
+    doc
+      .fontSize(12)
+      .fillColor('#c7d2fe')
+      .text('CENTRO DE IDIOMAS GLOBAL', { align: 'center', y: 90 });
+
+    // Contenido principal
+    doc.fillColor('#1e293b');
+    doc.moveDown(7);
+    doc
+      .fontSize(12)
+      .fillColor('#64748b')
+      .text('Este certificado acredita que', { align: 'center' });
+
+    doc.moveDown(0.8);
+    doc
+      .fontSize(28)
+      .fillColor('#1e293b')
+      .text(enrollment.user.name, { align: 'center' });
+
+    doc.moveDown(0.8);
+    doc
+      .fontSize(12)
+      .fillColor('#64748b')
+      .text('ha completado exitosamente el curso de', { align: 'center' });
+
+    doc.moveDown(0.6);
+    doc
+      .fontSize(22)
+      .fillColor('#4f46e5')
+      .text(enrollment.group.course.name, { align: 'center' });
+
+    doc.moveDown(0.5);
+    doc
+      .fontSize(13)
+      .fillColor('#64748b')
+      .text(
+        `Nivel ${enrollment.group.course.level} • Grupo ${enrollment.group.name} • Progreso: ${enrollment.progress}%`,
+        { align: 'center' },
+      );
+
+    doc.moveDown(2);
+    doc
+      .fontSize(12)
+      .fillColor('#1e293b')
+      .text('Felicitaciones por su dedicación y esfuerzo.', {
+        align: 'center',
+      });
+
+    // Pie de página
+    const fecha = new Date().toLocaleDateString('es-ES', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+    doc.moveDown(2.5);
+    doc
+      .fontSize(10)
+      .fillColor('#64748b')
+      .text(`Fecha de emisión: ${fecha}`, { align: 'center' });
+    doc
+      .fontSize(9)
+      .fillColor('#94a3b8')
+      .text(
+        `Código de verificación: CERT-${enrollment.id}-${Date.now().toString().slice(-6)}`,
+        { align: 'center' },
+      );
+
+    // Firma
+    doc.moveDown(10);
+    doc
+      .moveTo(180, doc.y + 5)
+      .lineTo(340, doc.y + 5)
+      .lineWidth(0.5)
+      .stroke('#94a3b8');
+    doc
+      .fontSize(9)
+      .fillColor('#64748b')
+      .text('Director Académico', 180, doc.y + 10, {
+        width: 160,
+        align: 'center',
+      });
 
     doc.end();
   }
