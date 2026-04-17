@@ -11,7 +11,7 @@ export class EnrollmentsService {
     return this.prisma.enrollment.findMany({
       include: {
         user: { select: { id: true, name: true, email: true } },
-        group: { select: { id: true, name: true, courseId: true } },
+        group: { include: { course: true } },
       },
     });
   }

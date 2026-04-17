@@ -87,7 +87,7 @@ export class AttendanceService {
 
   async getAttendanceByUser(userId: number) {
     const enrollments = await this.prisma.enrollment.findMany({
-      where: { userId },
+      where: { userId, status: { in: ['active', 'completed'] } },
       include: {
         group: {
           include: { course: true },

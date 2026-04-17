@@ -1,98 +1,114 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Centro de Idiomas Global - Backend
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+API REST para la gestión integral de un centro de idiomas.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## 🛠️ Tecnologías
 
-## Description
+- **NestJS** - Framework Node.js (TypeScript)
+- **Prisma** - ORM con PostgreSQL
+- **JWT** - Autenticación
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
-
-## Project setup
+## 🚀 Instalación
 
 ```bash
-$ npm install
+npm install
 ```
 
-## Compile and run the project
+## ▶️ Ejecución
 
 ```bash
-# development
-$ npm run start
+# Desarrollo
+npm run start:dev
 
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+# Producción
+npm run start:prod
 ```
 
-## Run tests
+## 🔐 Endpoints de Autenticación
 
-```bash
-# unit tests
-$ npm run test
+| Método | Endpoint | Descripción |
+|-------|----------|------------|
+| POST | `/auth/register` | Registrar nuevo usuario |
+| POST | `/auth/login` | Iniciar sesión |
 
-# e2e tests
-$ npm run test:e2e
+## 📘 Endpoints de Cursos
 
-# test coverage
-$ npm run test:cov
-```
+| Método | Endpoint | Rol | Descripción |
+|-------|----------|-----|-------------|
+| GET | `/courses` | Todos | Listar cursos |
+| POST | `/courses` | Admin | Crear curso |
+| GET | `/courses/:id` | Todos | Ver curso |
+| PATCH | `/courses/:id` | Admin | Actualizar curso |
+| DELETE | `/courses/:id` | Admin | Eliminar curso |
 
-## Deployment
+## 👥 Endpoints de Grupos
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+| Método | Endpoint | Rol | Descripción |
+|-------|----------|-----|-------------|
+| GET | `/groups` | Admin/Profesor | Listar grupos |
+| POST | `/groups` | Admin | Crear grupo |
+| GET | `/groups/:id` | Todos | Ver grupo |
+| PATCH | `/groups/:id` | Admin | Actualizar grupo |
+| DELETE | `/groups/:id` | Admin | Eliminar grupo |
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+## 🧑‍🎓 Endpoints de Matrículas
 
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
-```
+| Método | Endpoint | Rol | Descripción |
+|-------|----------|-----|-------------|
+| GET | `/enrollments` | Admin/Profesor | Todas las inscripciones |
+| POST | `/enrollments` | Admin | Inscribir alumno |
+| PATCH | `/enrollments/:id` | Admin/Profesor | Actualizar progreso/estado |
+| GET | `/enrollments/by-group?groupId=` | Admin/Profesor | Alumnos por grupo |
+| GET | `/enrollments/by-course?courseId=` | Admin/Profesor | Alumnos por curso |
+| GET | `/enrollments/my-progress` | Alumno | Mi progreso |
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+## 📅 Endpoints de Asistencia
 
-## Resources
+| Método | Endpoint | Rol | Descripción |
+|-------|----------|-----|-------------|
+| GET | `/attendance` | Admin/Profesor | Todas las assistencias |
+| POST | `/attendance` | Admin/Profesor | Registrar asistencia |
+| GET | `/attendance/my-attendance` | Alumno | Mi historial |
+| GET | `/attendance/by-enrollment/:id` | Admin/Profesor | Por matrícula |
 
-Check out a few resources that may come in handy when working with NestJS:
+## 💰 Endpoints de Pagos
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+| Método | Endpoint | Rol | Descripción |
+|-------|----------|-----|-------------|
+| GET | `/payments` | Admin/Profesor | Todos los pagos |
+| POST | `/payments` | Admin | Crear pago |
+| PATCH | `/payments/:id/pay` | Admin | Marcar como pagado |
+| GET | `/payments/my-payments` | Alumno | Mis pagos |
 
-## Support
+## 🧾 Endpoints de Certificados
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+| Método | Endpoint | Rol | Descripción |
+|-------|----------|-----|-------------|
+| GET | `/certificates` | Admin/Profesor | Todos los certificados |
+| GET | `/certificates/my-certificates` | Alumno | Mis certificados |
+| GET | `/certificates/view/:enrollmentId` | Alumno | Ver/Generar certificado |
+| GET | `/certificates/by-group/:groupId` | Admin/Profesor | Por grupo |
 
-## Stay in touch
+## 📊 Endpoints de Reportes
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+| Método | Endpoint | Rol | Descripción |
+|-------|----------|-----|-------------|
+| GET | `/reports/summary` | Admin/Profesor | Resumen global |
+| GET | `/reports/groups` | Admin/Profesor | Resumen por grupos |
+| GET | `/reports/group/:id` | Admin/Profesor | Reporte detallado |
 
-## License
+## 👤 Gestión de Usuarios
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+| Método | Endpoint | Rol | Descripción |
+|-------|----------|-----|-------------|
+| GET | `/users` | Admin | Todos los usuarios |
+| POST | `/users` | Admin | Crear usuario |
+| GET | `/users/:id` | Admin | Ver usuario |
+| PATCH | `/users/:id` | Admin | Actualizar usuario |
+| DELETE | `/users/:id` | Admin | Eliminar usuario |
+
+## 🔒 Roles
+
+- **admin** - Acceso completo
+- **profesor** - Gestiona sus grupos y estudiantes
+- **alumno** - Acceso restringido a sus datos
