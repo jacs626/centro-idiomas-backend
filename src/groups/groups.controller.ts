@@ -37,8 +37,14 @@ export class GroupsController {
 
   @UseGuards(JwtAuthGuard)
   @Get('by-course')
-  findByCourse(@Query('courseId') courseId: string, @Request() req: RequestWithUser) {
-    return this.groupsService.findByCourseWithAccess(Number(courseId), req.user);
+  findByCourse(
+    @Query('courseId') courseId: string,
+    @Request() req: RequestWithUser,
+  ) {
+    return this.groupsService.findByCourseWithAccess(
+      Number(courseId),
+      req.user,
+    );
   }
 
   @UseGuards(JwtAuthGuard)

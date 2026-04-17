@@ -28,7 +28,10 @@ export class GroupsService {
     });
   }
 
-  async findByCourseWithAccess(courseId: number, user: { sub: number; role: string }) {
+  async findByCourseWithAccess(
+    courseId: number,
+    user: { sub: number; role: string },
+  ) {
     if (user.role === 'admin' || user.role === 'profesor') {
       return this.prisma.group.findMany({
         where: { courseId },

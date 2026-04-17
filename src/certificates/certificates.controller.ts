@@ -24,7 +24,10 @@ export class CertificatesController {
   }
 
   @Get('generate/enrollment/:enrollmentId')
-  generateByEnrollment(@Param('enrollmentId', ParseIntPipe) enrollmentId: number, @Res() res: Response) {
+  generateByEnrollment(
+    @Param('enrollmentId', ParseIntPipe) enrollmentId: number,
+    @Res() res: Response,
+  ) {
     return this.certificatesService.generate(enrollmentId, res);
   }
 

@@ -108,7 +108,7 @@ export class AttendanceService {
           group: enrollment.group.name,
           attendance,
         };
-      })
+      }),
     );
 
     return attendanceData;

@@ -95,7 +95,12 @@ export class EnrollmentsService {
   }
 
   async getProgressByUserAndGroup(userId: number, groupId: number) {
-    console.log('[getProgress service] Buscando enrollment para userId:', userId, 'groupId:', groupId);
+    console.log(
+      '[getProgress service] Buscando enrollment para userId:',
+      userId,
+      'groupId:',
+      groupId,
+    );
     const enrollment = await this.prisma.enrollment.findFirst({
       where: { userId, groupId },
       include: {
@@ -121,7 +126,10 @@ export class EnrollmentsService {
   }
 
   async getProgressByUser(userId: number) {
-    console.log('[getProgressByUser] Buscando enrollments para userId:', userId);
+    console.log(
+      '[getProgressByUser] Buscando enrollments para userId:',
+      userId,
+    );
     const enrollments = await this.prisma.enrollment.findMany({
       where: { userId },
       include: {
@@ -131,9 +139,12 @@ export class EnrollmentsService {
       },
     });
 
-    console.log('[getProgressByUser] Enrollments encontrados:', enrollments.length);
+    console.log(
+      '[getProgressByUser] Enrollments encontrados:',
+      enrollments.length,
+    );
 
-    return enrollments.map(e => ({
+    return enrollments.map((e) => ({
       progress: e.progress,
       status: e.status,
       group: e.group.name,
