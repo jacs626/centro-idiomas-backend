@@ -8,9 +8,13 @@ import * as bcrypt from 'bcrypt';
 export class UsersService {
   constructor(private prisma: PrismaService) {}
 
-  async findAll() {
+  async findAll(role?: string) {
+    const where: any = { deletedAt: null };
+    if (role) {
+      where.role = role;
+    }
     const users = await this.prisma.user.findMany({
-      where: { deletedAt: null },
+      where,
     });
     return users.map(({ password, ...user }) => user);
   }
