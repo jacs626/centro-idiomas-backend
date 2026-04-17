@@ -12,7 +12,7 @@ import { Roles } from '../auth/roles.decorator';
 
 @Controller('reports')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('admin', 'profesor')
+@Roles('admin')
 export class ReportsController {
   constructor(private readonly service: ReportsService) {}
 

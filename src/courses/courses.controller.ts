@@ -29,7 +29,10 @@ export class CoursesController {
   findAll(@Request() req: RequestWithUser) {
     const userRole = req.user?.role;
     if (userRole === 'admin') {
-      return this.coursesService.findAll();
+      return this.coursesService.findAll(req.user);
+    }
+    if (userRole === 'profesor') {
+      return this.coursesService.findAll(req.user);
     }
     return this.coursesService.findEnrolledByUser(req.user.sub);
   }

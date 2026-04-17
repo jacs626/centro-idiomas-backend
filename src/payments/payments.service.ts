@@ -97,4 +97,26 @@ export class PaymentsService {
       orderBy: { dueDate: 'asc' },
     });
   }
+
+  async findAll(filters?: { groupId?: number; status?: string }) {
+    const where: any = {};
+    if (filters?.groupId) {
+      where.enrollment = { groupId: filters.groupId };
+    }
+    if (filters?.status) {
+      where.status = filters.status;
+    }
+    return this.prisma.payment.findMany({
+      where,
+      include: {
+        enrollment: {
+          include: {
+            user: { select: { id: true, name: true, email: true } },
+            group: { include: { course: true } },
+          },
+        },
+      },
+      orderBy: { dueDate: 'asc' },
+    });
+  }
 }

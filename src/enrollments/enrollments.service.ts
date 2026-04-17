@@ -7,8 +7,12 @@ import { UpdateEnrollmentDto } from './dto/update-enrollment.dto/update-enrollme
 export class EnrollmentsService {
   constructor(private prisma: PrismaService) {}
 
-  async findAll() {
+  async findAll(user?: { sub: number; role: string }) {
+    const where = user?.role === 'profesor' 
+      ? { group: { teacherId: user.sub } } 
+      : {};
     return this.prisma.enrollment.findMany({
+      where,
       include: {
         user: { select: { id: true, name: true, email: true } },
         group: { include: { course: true } },
@@ -68,12 +72,26 @@ export class EnrollmentsService {
     });
   }
 
-  async findByGroup(groupId: number) {
+  async findByUserFilter(where: any) {
     return this.prisma.enrollment.findMany({
-      where: { groupId },
+      where,
       include: {
         user: { select: { id: true, name: true, email: true } },
-        group: { select: { id: true, name: true, courseId: true } },
+        group: { include: { course: true } },
+      },
+    });
+  }
+
+  async findByGroup(groupId: number, user?: { sub: number; role: string }) {
+    const where: any = { groupId };
+    if (user?.role === 'profesor') {
+      where.group = { teacherId: user.sub };
+    }
+    return this.prisma.enrollment.findMany({
+      where,
+      include: {
+        user: { select: { id: true, name: true, email: true } },
+        group: { include: { course: true } },
       },
     });
   }

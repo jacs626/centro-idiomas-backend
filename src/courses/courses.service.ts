@@ -7,8 +7,21 @@ import { UpdateCourseDto } from './dto/update-course.dto/update-course.dto';
 export class CoursesService {
   constructor(private prisma: PrismaService) {}
 
-  async findAll() {
-    return this.prisma.course.findMany();
+  async findAll(user?: { sub: number; role: string }) {
+    if (!user || user.role === 'alumno') {
+      return this.prisma.course.findMany({ take: 0 });
+    }
+    if (user.role === 'admin') {
+      return this.prisma.course.findMany();
+    }
+    if (user.role === 'profesor') {
+      return this.prisma.course.findMany({
+        where: {
+          groups: { some: { teacherId: user.sub } },
+        },
+      });
+    }
+    return [];
   }
 
   async findEnrolledByUser(userId: number) {

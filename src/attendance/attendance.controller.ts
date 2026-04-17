@@ -60,7 +60,7 @@ export class AttendanceController {
 
   @Get('group/:id')
   @Roles('admin', 'profesor')
-  findByGroup(@Param('id', ParseIntPipe) id: number) {
-    return this.attendanceService.findByGroup(id);
+  findByGroup(@Param('id', ParseIntPipe) id: number, @Req() req: RequestWithUser) {
+    return this.attendanceService.findByGroup(id, req.user);
   }
 }

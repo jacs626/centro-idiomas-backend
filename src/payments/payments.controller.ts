@@ -26,18 +26,19 @@ export class PaymentsController {
   constructor(private readonly paymentsService: PaymentsService) {}
 
   @Post()
-  @Roles('admin', 'profesor')
+  @Roles('admin')
   create(@Body() dto: CreatePaymentDto) {
     return this.paymentsService.create(dto);
   }
 
   @Patch(':id/pay')
-  @Roles('admin', 'profesor')
+  @Roles('admin')
   markAsPaid(@Param('id', ParseIntPipe) id: number) {
     return this.paymentsService.markAsPaid(id);
   }
 
   @Get('by-user')
+  @Roles('admin')
   getByUser(@Query('userId') userId: string) {
     return this.paymentsService.findByUser(Number(userId));
   }
@@ -66,5 +67,17 @@ export class PaymentsController {
   @Roles('admin', 'profesor')
   findByGroup(@Param('id', ParseIntPipe) id: number) {
     return this.paymentsService.findByGroup(id);
+  }
+
+  @Get()
+  @Roles('admin')
+  findAll(
+    @Query('groupId') groupId?: string,
+    @Query('status') status?: string,
+  ) {
+    return this.paymentsService.findAll({
+      groupId: groupId ? Number(groupId) : undefined,
+      status,
+    });
   }
 }

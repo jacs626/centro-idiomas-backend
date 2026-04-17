@@ -7,8 +7,10 @@ import { UpdateGroupDto } from './dto/update-group.dto/update-group.dto';
 export class GroupsService {
   constructor(private prisma: PrismaService) {}
 
-  async findAll() {
+  async findAll(user?: { sub: number; role: string }) {
+    const where = user?.role === 'profesor' ? { teacherId: user.sub } : {};
     return this.prisma.group.findMany({
+      where,
       include: { course: true, teacher: true },
     });
   }
@@ -88,5 +90,12 @@ export class GroupsService {
     }
     await this.prisma.group.delete({ where: { id } });
     return group;
+  }
+
+  async findTeachers() {
+    return this.prisma.user.findMany({
+      where: { role: 'profesor' },
+      select: { id: true, name: true, email: true },
+    });
   }
 }

@@ -29,10 +29,20 @@ export class GroupsController {
   @Get()
   findAll(@Request() req: RequestWithUser) {
     const userRole = req.user?.role;
-    if (userRole === 'admin' || userRole === 'profesor') {
+    if (userRole === 'admin') {
       return this.groupsService.findAll();
     }
+    if (userRole === 'profesor') {
+      return this.groupsService.findAll(req.user);
+    }
     return this.groupsService.findEnrolledByUser(req.user.sub);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @Get('teachers')
+  findTeachers() {
+    return this.groupsService.findTeachers();
   }
 
   @UseGuards(JwtAuthGuard)

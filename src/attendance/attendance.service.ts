@@ -47,7 +47,16 @@ export class AttendanceService {
     });
   }
 
-  async findByGroup(groupId: number) {
+  async findByGroup(groupId: number, user?: { sub: number; role: string }) {
+    if (user?.role === 'profesor') {
+      const group = await this.prisma.group.findUnique({
+        where: { id: groupId },
+        select: { teacherId: true },
+      });
+      if (group?.teacherId !== user.sub) {
+        return [];
+      }
+    }
     return this.prisma.attendance.findMany({
       where: {
         enrollment: {

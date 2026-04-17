@@ -28,14 +28,17 @@ export class EnrollmentsController {
 
   @Get()
   @Roles('admin', 'profesor')
-  findAll() {
-    return this.enrollmentsService.findAll();
+  findAll(@Req() req: RequestWithUser) {
+    return this.enrollmentsService.findAll(req.user);
   }
 
   @Get('by-user')
   @Roles('admin', 'profesor')
-  findByUser(@Query('userId') userId: string) {
-    return this.enrollmentsService.findByUser(Number(userId));
+  findByUser(@Query('userId') userId: string, @Req() req: RequestWithUser) {
+    const where = req.user.role === 'profesor' 
+      ? { userId: Number(userId), group: { teacherId: req.user.sub } }
+      : { userId: Number(userId) };
+    return this.enrollmentsService.findByUserFilter(where);
   }
 
   @Get('progress/:groupId')
@@ -62,8 +65,8 @@ export class EnrollmentsController {
 
   @Get('by-group')
   @Roles('admin', 'profesor')
-  findByGroup(@Query('groupId') groupId: string) {
-    return this.enrollmentsService.findByGroup(Number(groupId));
+  findByGroup(@Query('groupId') groupId: string, @Req() req: RequestWithUser) {
+    return this.enrollmentsService.findByGroup(Number(groupId), req.user);
   }
 
   @Post()
