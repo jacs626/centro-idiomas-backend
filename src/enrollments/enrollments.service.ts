@@ -93,4 +93,54 @@ export class EnrollmentsService {
       },
     });
   }
+
+  async getProgressByUserAndGroup(userId: number, groupId: number) {
+    console.log('[getProgress service] Buscando enrollment para userId:', userId, 'groupId:', groupId);
+    const enrollment = await this.prisma.enrollment.findFirst({
+      where: { userId, groupId },
+      include: {
+        group: {
+          include: { course: true },
+        },
+      },
+    });
+
+    console.log('[getProgress service] Enrollment encontrado:', enrollment);
+
+    if (!enrollment) {
+      return null;
+    }
+
+    return {
+      progress: enrollment.progress,
+      status: enrollment.status,
+      group: enrollment.group.name,
+      course: enrollment.group.course.name,
+      courseLevel: enrollment.group.course.level,
+    };
+  }
+
+  async getProgressByUser(userId: number) {
+    console.log('[getProgressByUser] Buscando enrollments para userId:', userId);
+    const enrollments = await this.prisma.enrollment.findMany({
+      where: { userId },
+      include: {
+        group: {
+          include: { course: true },
+        },
+      },
+    });
+
+    console.log('[getProgressByUser] Enrollments encontrados:', enrollments.length);
+
+    return enrollments.map(e => ({
+      progress: e.progress,
+      status: e.status,
+      group: e.group.name,
+      course: e.group.course.name,
+      courseLevel: e.group.course.level,
+      groupId: e.groupId,
+      courseId: e.group.courseId,
+    }));
+  }
 }

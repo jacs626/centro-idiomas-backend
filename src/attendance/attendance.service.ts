@@ -84,4 +84,33 @@ export class AttendanceService {
       },
     });
   }
+
+  async getAttendanceByUser(userId: number) {
+    const enrollments = await this.prisma.enrollment.findMany({
+      where: { userId },
+      include: {
+        group: {
+          include: { course: true },
+        },
+      },
+    });
+
+    const attendanceData = await Promise.all(
+      enrollments.map(async (enrollment) => {
+        const attendance = await this.prisma.attendance.findMany({
+          where: { enrollmentId: enrollment.id },
+          orderBy: { date: 'asc' },
+        });
+        return {
+          enrollmentId: enrollment.id,
+          course: enrollment.group.course.name,
+          courseLevel: enrollment.group.course.level,
+          group: enrollment.group.name,
+          attendance,
+        };
+      })
+    );
+
+    return attendanceData;
+  }
 }

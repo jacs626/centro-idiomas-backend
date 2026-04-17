@@ -77,4 +77,24 @@ export class PaymentsService {
       },
     });
   }
+
+  async findByUser(userId: number) {
+    return this.prisma.payment.findMany({
+      where: {
+        enrollment: {
+          userId,
+        },
+      },
+      include: {
+        enrollment: {
+          include: {
+            group: {
+              include: { course: true },
+            },
+          },
+        },
+      },
+      orderBy: { dueDate: 'asc' },
+    });
+  }
 }
