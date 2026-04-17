@@ -16,13 +16,23 @@ import { Roles } from '../auth/roles.decorator';
 export class ReportsController {
   constructor(private readonly service: ReportsService) {}
 
-  @Get('retention/group/:id')
-  getRetention(@Param('id', ParseIntPipe) id: number) {
-    return this.service.getGroupRetention(id);
+  @Get('summary')
+  getSummary() {
+    return this.service.getSummary();
+  }
+
+  @Get('groups')
+  getGroupsSummary() {
+    return this.service.getGroupsSummary();
+  }
+
+  @Get('group/:id')
+  getGroupReport(@Param('id', ParseIntPipe) id: number) {
+    return this.service.getGroupReports(id);
   }
 
   @Get('retention/global')
-  getGlobal() {
+  getGlobalRetention() {
     return this.service.getGlobalRetention();
   }
 
