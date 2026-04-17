@@ -78,7 +78,11 @@ export class CertificatesService {
         enrollment: {
           include: {
             user: { select: { id: true, name: true, email: true } },
-            group: { select: { id: true, name: true } },
+            group: {
+              include: {
+                course: true,
+              },
+            },
           },
         },
       },
@@ -95,6 +99,75 @@ export class CertificatesService {
     }
 
     return cert;
+  }
+
+  async findByGroup(groupId: number) {
+    return this.prisma.certificate.findMany({
+      where: {
+        enrollment: {
+          groupId,
+        },
+      },
+      include: {
+        enrollment: {
+          include: {
+            user: { select: { id: true, name: true } },
+            group: {
+              include: {
+                course: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: {
+        issuedAt: 'desc',
+      },
+    });
+  }
+
+  async checkByEnrollment(enrollmentId: number) {
+    const cert = await this.prisma.certificate.findUnique({
+      where: { enrollmentId },
+    });
+    return { exists: !!cert, enrollmentId };
+  }
+
+  async viewOrGenerate(enrollmentId: number, res: Response) {
+    const cert = await this.prisma.certificate.findUnique({
+      where: { enrollmentId },
+    });
+
+    if (cert) {
+      return this.download(enrollmentId, res);
+    }
+
+    return this.generate(enrollmentId, res);
+  }
+
+  async findByUser(userId: number) {
+    return this.prisma.certificate.findMany({
+      where: {
+        enrollment: {
+          userId,
+        },
+      },
+      include: {
+        enrollment: {
+          include: {
+            user: { select: { id: true, name: true } },
+            group: {
+              include: {
+                course: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: {
+        issuedAt: 'desc',
+      },
+    });
   }
 
   private generatePdf(enrollment: any, res: Response) {
