@@ -1,10 +1,15 @@
-import { IsNumber, IsDateString, IsIn, IsOptional } from 'class-validator';
+import { IsNumber, IsDateString, IsIn, IsOptional, Min } from 'class-validator';
+import { Transform } from 'class-transformer';
 
 export class CreatePaymentDto {
+  @Transform(({ value }) => Number(value))
   @IsNumber()
+  @Min(1)
   enrollmentId!: number;
 
+  @Transform(({ value }) => Number(value))
   @IsNumber()
+  @Min(1)
   amount!: number;
 
   @IsIn(['matricula', 'cuota'])

@@ -1,6 +1,8 @@
 import { IsNumber, IsDateString, IsIn } from 'class-validator';
+import { Transform } from 'class-transformer';
 
 export class CreateAttendanceDto {
+  @Transform(({ value }) => Number(value))
   @IsNumber()
   enrollmentId!: number;
 
