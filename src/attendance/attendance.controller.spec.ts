@@ -84,11 +84,12 @@ describe('AttendanceController', () => {
       mockAttendanceService.findByEnrollment.mockResolvedValue([
         mockAttendance,
       ]);
+      const req = { user: { sub: 1, role: 'admin' } } as any;
 
-      const result = await controller.findByEnrollment(1);
+      const result = await controller.findByEnrollment(1, req);
 
       expect(result).toEqual([mockAttendance]);
-      expect(mockAttendanceService.findByEnrollment).toHaveBeenCalledWith(1);
+      expect(mockAttendanceService.findByEnrollment).toHaveBeenCalledWith(1, req.user);
     });
   });
 

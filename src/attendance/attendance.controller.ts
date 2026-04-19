@@ -47,15 +47,18 @@ export class AttendanceController {
   }
 
   @Get('enrollment/:id')
-  findByEnrollment(@Param('id', ParseIntPipe) id: number) {
-    return this.attendanceService.findByEnrollment(id);
+  @Roles('admin', 'profesor', 'alumno')
+  findByEnrollment(@Param('id', ParseIntPipe) id: number, @Req() req: RequestWithUser) {
+    return this.attendanceService.findByEnrollment(id, req.user);
   }
 
   @Get('by-enrollment/:enrollmentId')
+  @Roles('admin', 'profesor', 'alumno')
   findByEnrollmentAlt(
     @Param('enrollmentId', ParseIntPipe) enrollmentId: number,
+    @Req() req: RequestWithUser,
   ) {
-    return this.attendanceService.findByEnrollment(enrollmentId);
+    return this.attendanceService.findByEnrollment(enrollmentId, req.user);
   }
 
   @Get('group/:id')

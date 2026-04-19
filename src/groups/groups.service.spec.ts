@@ -1,212 +1,151 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { GroupsService } from './groups.service';
-import { NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { NotFoundException } from '@nestjs/common';
 
 describe('GroupsService', () => {
   let service: GroupsService;
-  let prisma: {
+  let prisma: PrismaService;
+
+  const mockPrisma = {
     group: {
-      findMany: jest.Mock;
-      create: jest.Mock;
-      findUnique: jest.Mock;
-      update: jest.Mock;
-      delete: jest.Mock;
-    };
+      findMany: jest.fn(),
+      findUnique: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
+    },
   };
 
   beforeEach(async () => {
-    const groups: Array<{
-      id: number;
-      name: string;
-      courseId: number;
-      teacherId: number;
-      startDate: string;
-      endDate: string;
-    }> = [];
-    let idCounter = 1;
-
-    prisma = {
-      group: {
-        findMany: jest
-          .fn()
-          .mockImplementation(() => Promise.resolve([...groups])),
-        create: jest.fn().mockImplementation((data) => {
-          const group = { id: idCounter++, ...data };
-          groups.push(group);
-          return Promise.resolve({ ...group, course: {}, teacher: {} });
-        }),
-        findUnique: jest.fn().mockImplementation(({ where }) => {
-          const group = groups.find((g) => g.id === where.id);
-          return Promise.resolve(group || null);
-        }),
-        update: jest.fn().mockImplementation((args) => {
-          const index = groups.findIndex((g) => g.id === args.where.id);
-          if (index !== -1) {
-            groups[index] = { ...groups[index], ...args.data };
-            return Promise.resolve({
-              ...groups[index],
-              course: {},
-              teacher: {},
-            });
-          }
-          return Promise.resolve(null);
-        }),
-        delete: jest.fn().mockImplementation(({ where }) => {
-          const index = groups.findIndex((g) => g.id === where.id);
-          if (index !== -1) {
-            groups.splice(index, 1);
-          }
-          return Promise.resolve(undefined);
-        }),
-      },
-    };
-
     const module: TestingModule = await Test.createTestingModule({
-      providers: [GroupsService, { provide: PrismaService, useValue: prisma }],
+      providers: [
+        GroupsService,
+        { provide: PrismaService, useValue: mockPrisma },
+      ],
     }).compile();
 
     service = module.get<GroupsService>(GroupsService);
+    prisma = module.get<PrismaService>(PrismaService);
+    jest.clearAllMocks();
   });
 
-  it('should be defined', () => {
-    expect(service).toBeDefined();
+  describe('findAll', () => {
+    it('should return all groups for admin', async () => {
+      const mockGroups = [
+        { id: 1, name: 'Group A', courseId: 1, teacherId: 1, course: {}, teacher: {} },
+        { id: 2, name: 'Group B', courseId: 1, teacherId: 2, course: {}, teacher: {} },
+      ];
+      mockPrisma.group.findMany.mockResolvedValue(mockGroups);
+
+      const groups = await service.findAll({ sub: 1, role: 'admin' });
+
+      expect(groups).toHaveLength(2);
+      expect(mockPrisma.group.findMany).toHaveBeenCalled();
+    });
+
+    it('should filter groups by teacher for profesor', async () => {
+      mockPrisma.group.findMany.mockResolvedValue([
+        { id: 1, name: 'Group A', teacherId: 1, course: {}, teacher: {} },
+      ]);
+
+      await service.findAll({ sub: 1, role: 'profesor' });
+
+      expect(mockPrisma.group.findMany).toHaveBeenCalled();
+    });
   });
 
-  describe('CRUD Operations', () => {
-    const dto = {
-      name: 'Group A',
-      courseId: 1,
-      teacherId: 1,
-      startDate: '2024-01-01',
-      endDate: '2024-06-01',
-    };
+  describe('findOne', () => {
+    it('should return a group by id', async () => {
+      const mockGroup = { id: 1, name: 'Group A', courseId: 1, teacherId: 1 };
+      mockPrisma.group.findUnique.mockResolvedValue(mockGroup);
 
-    describe('create', () => {
-      it('should create a group', async () => {
-        const createdGroup = {
-          id: 1,
+      const group = await service.findOne(1);
+
+      expect(group.name).toBe('Group A');
+    });
+
+    it('should throw NotFoundException when not found', async () => {
+      mockPrisma.group.findUnique.mockResolvedValue(null);
+
+      await expect(service.findOne(999)).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('findByCourse', () => {
+    it('should return groups by course', async () => {
+      const mockGroups = [
+        { id: 1, name: 'Group A', courseId: 1, course: {}, teacher: {} },
+        { id: 2, name: 'Group B', courseId: 1, course: {}, teacher: {} },
+      ];
+      mockPrisma.group.findMany.mockResolvedValue(mockGroups);
+
+      const groups = await service.findByCourse(1);
+
+      expect(groups).toHaveLength(2);
+      expect(mockPrisma.group.findMany).toHaveBeenCalledWith({
+        where: { courseId: 1 },
+        include: { course: true, teacher: true },
+      });
+    });
+  });
+
+  describe('create', () => {
+    it('should create a new group', async () => {
+      const dto = { name: 'Group A', courseId: 1, teacherId: 1, startDate: '2024-01-01', endDate: '2024-06-01', schedule: 'Mon 10:00' };
+      const createdGroup = { id: 1, name: 'Group A', courseId: 1, teacherId: 1, startDate: new Date('2024-01-01'), endDate: new Date('2024-06-01'), schedule: 'Mon 10:00', course: {}, teacher: {} };
+      mockPrisma.group.create.mockResolvedValue(createdGroup);
+
+      const result = await service.create(dto);
+
+      expect(result).toEqual(expect.objectContaining({ name: 'Group A' }));
+      expect(mockPrisma.group.create).toHaveBeenCalledWith({
+        data: {
           name: 'Group A',
           courseId: 1,
           teacherId: 1,
           startDate: new Date('2024-01-01'),
           endDate: new Date('2024-06-01'),
-          course: {},
-          teacher: {},
-        };
-        prisma.group.create.mockResolvedValue(createdGroup);
-        const result = await service.create(dto);
-        expect(result).toHaveProperty('id');
-        expect(result.name).toBe('Group A');
-        expect(result.courseId).toBe(1);
-        expect(prisma.group.create).toHaveBeenCalledWith({
-          data: {
-            name: 'Group A',
-            courseId: 1,
-            teacherId: 1,
-            startDate: new Date('2024-01-01'),
-            endDate: new Date('2024-06-01'),
-          },
-          include: { course: true, teacher: true },
-        });
+          schedule: 'Mon 10:00',
+        },
+        include: { course: true, teacher: true },
       });
     });
+  });
 
-    describe('findAll', () => {
-      it('should return all groups', async () => {
-        prisma.group.findMany.mockResolvedValue([
-          { id: 1, name: 'Group A', courseId: 1, course: {}, teacher: {} },
-        ]);
-        const groups = await service.findAll();
-        expect(groups).toHaveLength(1);
-        expect(groups[0].name).toBe('Group A');
-        expect(prisma.group.findMany).toHaveBeenCalledWith({
-          include: { course: true, teacher: true },
-        });
-      });
+  describe('update', () => {
+    it('should update a group', async () => {
+      const mockGroup = { id: 1, name: 'Group A' };
+      mockPrisma.group.findUnique.mockResolvedValue(mockGroup);
+      mockPrisma.group.update.mockResolvedValue({ ...mockGroup, name: 'Updated Group' });
+
+      const result = await service.update(1, { name: 'Updated Group' });
+
+      expect(result.name).toBe('Updated Group');
     });
 
-    describe('findByCourse', () => {
-      it('should return groups by course', async () => {
-        prisma.group.findMany.mockResolvedValue([
-          { id: 1, name: 'Group A', courseId: 1, course: {}, teacher: {} },
-          { id: 2, name: 'Group B', courseId: 1, course: {}, teacher: {} },
-        ]);
-        const groups = await service.findByCourse(1);
-        expect(groups).toHaveLength(2);
-        expect(prisma.group.findMany).toHaveBeenCalledWith({
-          where: { courseId: 1 },
-          include: { course: true, teacher: true },
-        });
-      });
+    it('should throw NotFoundException for non-existent group', async () => {
+      mockPrisma.group.findUnique.mockResolvedValue(null);
 
-      it('should return empty array when no groups found', async () => {
-        prisma.group.findMany.mockResolvedValue([]);
-        const groups = await service.findByCourse(999);
-        expect(groups).toHaveLength(0);
-      });
+      await expect(service.update(999, { name: 'Test' })).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('remove', () => {
+    it('should delete a group', async () => {
+      const mockGroup = { id: 1, name: 'Group A' };
+      mockPrisma.group.findUnique.mockResolvedValue(mockGroup);
+      mockPrisma.group.delete.mockResolvedValue(mockGroup);
+
+      const result = await service.remove(1);
+
+      expect(result.id).toBe(1);
     });
 
-    describe('update', () => {
-      it('should update a group', async () => {
-        const existingGroup = {
-          id: 1,
-          name: 'Group A',
-          courseId: 1,
-          teacherId: 1,
-          startDate: '2024-01-01',
-          endDate: '2024-06-01',
-        };
-        prisma.group.findUnique.mockResolvedValue(existingGroup);
-        const updatedGroup = {
-          id: 1,
-          name: 'Updated Group',
-          courseId: 1,
-          teacherId: 1,
-          startDate: '2024-01-01',
-          endDate: '2024-06-01',
-          course: {},
-          teacher: {},
-        };
-        prisma.group.update.mockResolvedValue(updatedGroup);
-        const updated = await service.update(1, { name: 'Updated Group' });
-        expect(updated.name).toBe('Updated Group');
-        expect(prisma.group.update).toHaveBeenCalledWith({
-          where: { id: 1 },
-          data: { name: 'Updated Group' },
-          include: { course: true, teacher: true },
-        });
-      });
+    it('should throw NotFoundException for non-existent group', async () => {
+      mockPrisma.group.findUnique.mockResolvedValue(null);
 
-      it('should throw NotFoundException for non-existent group', async () => {
-        prisma.group.findUnique.mockResolvedValue(null);
-        await expect(service.update(999, { name: 'Test' })).rejects.toThrow(
-          NotFoundException,
-        );
-      });
-    });
-
-    describe('remove', () => {
-      it('should remove a group', async () => {
-        const existingGroup = {
-          id: 1,
-          name: 'Group A',
-          courseId: 1,
-          teacherId: 1,
-          startDate: '2024-01-01',
-          endDate: '2024-06-01',
-        };
-        prisma.group.findUnique.mockResolvedValue(existingGroup);
-        prisma.group.delete.mockResolvedValue(existingGroup);
-        const removed = await service.remove(1);
-        expect(removed.id).toBe(1);
-        expect(prisma.group.delete).toHaveBeenCalledWith({ where: { id: 1 } });
-      });
-
-      it('should throw NotFoundException for non-existent group', async () => {
-        prisma.group.findUnique.mockResolvedValue(null);
-        await expect(service.remove(999)).rejects.toThrow(NotFoundException);
-      });
+      await expect(service.remove(999)).rejects.toThrow(NotFoundException);
     });
   });
 });

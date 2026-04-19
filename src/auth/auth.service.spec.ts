@@ -73,6 +73,7 @@ describe('AuthService', () => {
       expect(result).toHaveProperty('access_token');
       expect(mockJwtService.sign).toHaveBeenCalledWith({
         sub: 1,
+        name: 'John',
         email: 'john@example.com',
         role: 'alumno',
       });

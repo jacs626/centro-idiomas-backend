@@ -40,7 +40,20 @@ export class AttendanceService {
     });
   }
 
-  async findByEnrollment(enrollmentId: number) {
+  async findByEnrollment(enrollmentId: number, user?: { sub: number; role: string }) {
+    const enrollment = await this.prisma.enrollment.findUnique({
+      where: { id: enrollmentId },
+      include: { group: true },
+    });
+
+    if (!enrollment) {
+      return [];
+    }
+
+    if (user?.role === 'alumno' && enrollment.userId !== user.sub) {
+      return [];
+    }
+
     return this.prisma.attendance.findMany({
       where: { enrollmentId },
       orderBy: { date: 'asc' },

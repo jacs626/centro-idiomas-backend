@@ -62,7 +62,7 @@ describe('UsersController', () => {
   });
 
   describe('create', () => {
-    it('should create a user', () => {
+    it('should create a user', async () => {
       const dto = {
         name: 'Jane',
         email: 'jane@example.com',
@@ -75,18 +75,18 @@ describe('UsersController', () => {
         email: 'jane@example.com',
         role: 'alumno' as const,
       });
-      expect(controller.create(dto)).resolves.toEqual(
-        expect.objectContaining({ name: 'Jane' }),
-      );
+      const result = await controller.create(dto);
+      expect(result).toEqual(expect.objectContaining({ name: 'Jane' }));
       expect(mockUsersService.create).toHaveBeenCalledWith(dto);
     });
   });
 
   describe('update', () => {
-    it('should update a user', () => {
+    it('should update a user', async () => {
       const dto = { name: 'Updated' };
-      mockUsersService.update.mockReturnValue({ ...mockUser, ...dto });
-      expect(controller.update('1', dto)).toEqual({ ...mockUser, ...dto });
+      mockUsersService.update.mockResolvedValue({ ...mockUser, ...dto });
+      const result = await controller.update('1', dto);
+      expect(result).toEqual({ ...mockUser, ...dto });
       expect(mockUsersService.update).toHaveBeenCalledWith(1, dto);
     });
 
@@ -101,9 +101,10 @@ describe('UsersController', () => {
   });
 
   describe('remove', () => {
-    it('should remove a user', () => {
-      mockUsersService.remove.mockReturnValue(mockUser);
-      expect(controller.remove('1')).toEqual(mockUser);
+    it('should remove a user', async () => {
+      mockUsersService.remove.mockResolvedValue(mockUser);
+      const result = await controller.remove('1');
+      expect(result).toEqual(mockUser);
       expect(mockUsersService.remove).toHaveBeenCalledWith(1);
     });
 
