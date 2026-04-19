@@ -75,14 +75,14 @@ export class CertificatesController {
 
   @Get()
   @Roles('admin', 'profesor')
-  findAll() {
-    return this.certificatesService.findAll();
+  findAll(@Req() req: RequestWithUser) {
+    return this.certificatesService.findAll(req.user);
   }
 
   @Get('by-group/:groupId')
   @Roles('admin', 'profesor')
-  findByGroup(@Param('groupId', ParseIntPipe) groupId: number) {
-    return this.certificatesService.findByGroup(groupId);
+  findByGroup(@Param('groupId', ParseIntPipe) groupId: number, @Req() req: RequestWithUser) {
+    return this.certificatesService.findByGroup(groupId, req.user);
   }
 
   @Get('enrollment/:id')

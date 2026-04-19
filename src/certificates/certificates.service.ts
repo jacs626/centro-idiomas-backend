@@ -72,8 +72,12 @@ export class CertificatesService {
     return this.generatePdf(certificate.enrollment, res);
   }
 
-  async findAll() {
+async findAll(user: any) {
+    const where = user.role === 'profesor'
+      ? { enrollment: { group: { teacherId: user.sub } } }
+      : {};
     return this.prisma.certificate.findMany({
+      where,
       include: {
         enrollment: {
           include: {
@@ -89,19 +93,13 @@ export class CertificatesService {
     });
   }
 
-  async findByEnrollment(enrollmentId: number) {
-    const cert = await this.prisma.certificate.findUnique({
-      where: { enrollmentId },
-    });
-
-    if (!cert) {
-      throw new NotFoundException('Certificado no encontrado');
+  async findByGroup(groupId: number, user: any) {
+    if (user.role === 'profesor') {
+      const group = await this.prisma.group.findUnique({ where: { id: groupId } });
+      if (!group || group.teacherId !== user.sub) {
+        throw new ForbiddenException('No tienes acceso a este grupo');
+      }
     }
-
-    return cert;
-  }
-
-  async findByGroup(groupId: number) {
     return this.prisma.certificate.findMany({
       where: {
         enrollment: {
