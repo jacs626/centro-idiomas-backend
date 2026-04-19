@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -129,6 +130,31 @@ async findAll(user: any) {
       where: { enrollmentId },
     });
     return { exists: !!cert, enrollmentId };
+  }
+
+  async findByEnrollment(enrollmentId: number, user: any) {
+    const enrollment = await this.prisma.enrollment.findUnique({
+      where: { id: enrollmentId },
+      include: { group: true },
+    });
+
+    if (!enrollment) {
+      throw new NotFoundException('Matrícula no encontrada');
+    }
+
+    if (user.role === 'profesor' && enrollment.group.teacherId !== user.sub) {
+      throw new ForbiddenException('No tienes acceso a esta matrícula');
+    }
+
+    const cert = await this.prisma.certificate.findUnique({
+      where: { enrollmentId },
+    });
+
+    if (!cert) {
+      throw new NotFoundException('Certificado no encontrado');
+    }
+
+    return cert;
   }
 
   async viewOrGenerate(enrollmentId: number, res: Response) {

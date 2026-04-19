@@ -87,7 +87,7 @@ export class CertificatesController {
 
   @Get('enrollment/:id')
   @Roles('admin', 'profesor')
-  findByEnrollment(@Param('id', ParseIntPipe) id: number) {
-    return this.certificatesService.findByEnrollment(id);
+  findByEnrollment(@Param('id', ParseIntPipe) id: number, @Req() req: RequestWithUser) {
+    return this.certificatesService.findByEnrollment(id, req.user);
   }
 }

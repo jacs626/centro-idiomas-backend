@@ -108,6 +108,44 @@ export class ReportsService {
     return result;
   }
 
+  async getGroupsSummaryByCourse(courseId: number) {
+    const groups = await this.prisma.group.findMany({
+      where: { courseId },
+      include: {
+        course: true,
+        enrollments: true,
+      },
+    });
+
+    const result = groups.map((group) => {
+      const total = group.enrollments.length;
+      const active = group.enrollments.filter((e) => e.status === 'active').length;
+      const completed = group.enrollments.filter((e) => e.status === 'completed').length;
+      const dropped = group.enrollments.filter((e) => e.status === 'dropped').length;
+      const retention = total ? ((active + completed) / total) * 100 : 0;
+
+      const avgProgress =
+        group.enrollments.length > 0
+          ? group.enrollments.reduce((sum, e) => sum + e.progress, 0) /
+            group.enrollments.length
+          : 0;
+
+      return {
+        groupId: group.id,
+        groupName: group.name,
+        courseName: group.course.name,
+        total,
+        active,
+        completed,
+        dropped,
+        retention: Math.round(retention * 10) / 10,
+        avgProgress: Math.round(avgProgress * 10) / 10,
+      };
+    });
+
+    return result;
+  }
+
   async getGroupReports(groupId: number) {
     const group = await this.prisma.group.findUnique({
       where: { id: groupId },

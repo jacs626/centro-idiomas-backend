@@ -31,6 +31,11 @@ export class ReportsController {
     return this.service.getGroupReports(id);
   }
 
+  @Get('course/:id')
+  getCourseReport(@Param('id', ParseIntPipe) id: number) {
+    return this.service.getGroupsSummaryByCourse(id);
+  }
+
   @Get('retention/global')
   getGlobalRetention() {
     return this.service.getGlobalRetention();
