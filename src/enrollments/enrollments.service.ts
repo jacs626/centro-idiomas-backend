@@ -172,4 +172,67 @@ export class EnrollmentsService {
       courseId: e.group.courseId,
     }));
   }
+
+  async getMyStudents(teacherId: number, groupId?: number, courseId?: number) {
+    const where: any = {
+      group: { teacherId },
+    };
+    if (groupId) where.groupId = groupId;
+    if (courseId) where.group = { ...where.group, courseId };
+
+    const enrollments = await this.prisma.enrollment.findMany({
+      where,
+      include: {
+        user: { select: { id: true, name: true, email: true } },
+        group: { include: { course: true } },
+        payments: true,
+        attendance: true,
+      },
+    });
+
+    return enrollments.map((e) => ({
+      id: e.id,
+      userId: e.userId,
+      userName: e.user.name,
+      userEmail: e.user.email,
+      groupId: e.groupId,
+      groupName: e.group.name,
+      courseId: e.group.courseId,
+      courseName: e.group.course.name,
+      courseLevel: e.group.course.level,
+      progress: e.progress,
+      status: e.status,
+      payments: e.payments,
+      attendance: e.attendance,
+    }));
+  }
+
+  async getStudentsByFilters(groupId?: number, courseId?: number) {
+    const where: any = {};
+    if (groupId) where.groupId = groupId;
+    if (courseId) where.group = { courseId };
+
+    const enrollments = await this.prisma.enrollment.findMany({
+      where,
+      include: {
+        user: { select: { id: true, name: true, email: true, role: true } },
+        group: { include: { course: true } },
+      },
+    });
+
+    return enrollments.map((e) => ({
+      id: e.id,
+      userId: e.userId,
+      userName: e.user.name,
+      userEmail: e.user.email,
+      userRole: e.user.role,
+      groupId: e.groupId,
+      groupName: e.group.name,
+      courseId: e.group.courseId,
+      courseName: e.group.course.name,
+      courseLevel: e.group.course.level,
+      progress: e.progress,
+      status: e.status,
+    }));
+  }
 }

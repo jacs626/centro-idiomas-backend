@@ -28,12 +28,13 @@ describe('GroupsController', () => {
     },
   };
 
-  const mockGroupsService = {
+const mockGroupsService = {
     findAll: jest.fn(),
-    findByCourse: jest.fn(),
+    findByCourseWithAccess: jest.fn(),
     create: jest.fn(),
     update: jest.fn(),
     remove: jest.fn(),
+    findTeachers: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -53,16 +54,18 @@ describe('GroupsController', () => {
   describe('findAll', () => {
     it('should return all groups', async () => {
       mockGroupsService.findAll.mockResolvedValue([mockGroup]);
-      expect(await controller.findAll()).toEqual([mockGroup]);
+      const req = { user: { sub: 1, role: 'admin' } } as any;
+      expect(await controller.findAll(req)).toEqual([mockGroup]);
       expect(mockGroupsService.findAll).toHaveBeenCalled();
     });
   });
 
   describe('findByCourse', () => {
     it('should return groups by course', async () => {
-      mockGroupsService.findByCourse.mockResolvedValue([mockGroup]);
-      expect(await controller.findByCourse('1')).toEqual([mockGroup]);
-      expect(mockGroupsService.findByCourse).toHaveBeenCalledWith(1);
+      mockGroupsService.findByCourseWithAccess.mockResolvedValue([mockGroup]);
+      const req = { user: { sub: 1, role: 'admin' } } as any;
+      expect(await controller.findByCourse('1', req)).toEqual([mockGroup]);
+      expect(mockGroupsService.findByCourseWithAccess).toHaveBeenCalledWith(1, req.user);
     });
   });
 

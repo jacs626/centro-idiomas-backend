@@ -38,7 +38,8 @@ describe('CoursesController', () => {
   describe('findAll', () => {
     it('should return all courses', async () => {
       mockCoursesService.findAll.mockResolvedValue([mockCourse]);
-      expect(await controller.findAll()).toEqual([mockCourse]);
+      const req = { user: { sub: 1, role: 'admin' } } as any;
+      expect(await controller.findAll(req)).toEqual([mockCourse]);
       expect(mockCoursesService.findAll).toHaveBeenCalled();
     });
   });

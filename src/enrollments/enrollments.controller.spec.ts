@@ -21,7 +21,7 @@ describe('EnrollmentsController', () => {
 
   const mockEnrollmentsService = {
     findAll: jest.fn(),
-    findByUser: jest.fn(),
+    findByUserFilter: jest.fn(),
     findByGroup: jest.fn(),
     create: jest.fn(),
     update: jest.fn(),
@@ -46,24 +46,27 @@ describe('EnrollmentsController', () => {
   describe('findAll', () => {
     it('should return all enrollments', async () => {
       mockEnrollmentsService.findAll.mockResolvedValue([mockEnrollment]);
-      expect(await controller.findAll()).toEqual([mockEnrollment]);
+      const req = { user: { sub: 1, role: 'admin' } } as any;
+      expect(await controller.findAll(req)).toEqual([mockEnrollment]);
       expect(mockEnrollmentsService.findAll).toHaveBeenCalled();
     });
   });
 
   describe('findByUser', () => {
     it('should return enrollments by user', async () => {
-      mockEnrollmentsService.findByUser.mockResolvedValue([mockEnrollment]);
-      expect(await controller.findByUser('1')).toEqual([mockEnrollment]);
-      expect(mockEnrollmentsService.findByUser).toHaveBeenCalledWith(1);
+      mockEnrollmentsService.findByUserFilter.mockResolvedValue([mockEnrollment]);
+      const req = { user: { sub: 1, role: 'admin' } } as any;
+      expect(await controller.findByUser('1', req)).toEqual([mockEnrollment]);
+      expect(mockEnrollmentsService.findByUserFilter).toHaveBeenCalledWith({ userId: 1 });
     });
   });
 
   describe('findByGroup', () => {
     it('should return enrollments by group', async () => {
       mockEnrollmentsService.findByGroup.mockResolvedValue([mockEnrollment]);
-      expect(await controller.findByGroup('1')).toEqual([mockEnrollment]);
-      expect(mockEnrollmentsService.findByGroup).toHaveBeenCalledWith(1);
+      const req = { user: { sub: 1, role: 'admin' } } as any;
+      expect(await controller.findByGroup('1', req)).toEqual([mockEnrollment]);
+      expect(mockEnrollmentsService.findByGroup).toHaveBeenCalledWith(1, req.user);
     });
   });
 

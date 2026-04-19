@@ -58,19 +58,30 @@ export class UsersService {
   }
 
   async findById(id: number) {
-    const user = await this.prisma.user.findFirst({
-      where: { id, deletedAt: null },
+    const user = await this.prisma.user.findUnique({
+      where: { id },
     });
-    if (!user) {
+    if (!user || user.deletedAt) {
       throw new NotFoundException(`User with id ${id} not found`);
     }
-    const { password, ...result } = user;
-    return result;
+    return user;
   }
 
   async findByEmail(email: string) {
     return this.prisma.user.findFirst({
       where: { email, deletedAt: null },
+      select: { id: true, email: true, name: true, role: true, password: true, createdAt: true, deletedAt: true },
+    });
+  }
+
+  async updatePassword(id: number, newPassword: string) {
+    const user = await this.prisma.user.findUnique({ where: { id } });
+    if (!user) {
+      throw new NotFoundException(`User with id ${id} not found`);
+    }
+    await this.prisma.user.update({
+      where: { id },
+      data: { password: newPassword },
     });
   }
 }

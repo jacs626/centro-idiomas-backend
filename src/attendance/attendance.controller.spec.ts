@@ -95,11 +95,12 @@ describe('AttendanceController', () => {
   describe('findByGroup', () => {
     it('should return attendances by group', async () => {
       mockAttendanceService.findByGroup.mockResolvedValue([mockAttendance]);
+      const req = { user: { sub: 1, role: 'admin' } } as any;
 
-      const result = await controller.findByGroup(1);
+      const result = await controller.findByGroup(1, req);
 
       expect(result).toEqual([mockAttendance]);
-      expect(mockAttendanceService.findByGroup).toHaveBeenCalledWith(1);
+      expect(mockAttendanceService.findByGroup).toHaveBeenCalledWith(1, req.user);
     });
   });
 });

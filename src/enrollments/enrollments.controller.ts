@@ -32,6 +32,18 @@ export class EnrollmentsController {
     return this.enrollmentsService.findAll(req.user);
   }
 
+  @Get('students')
+  @Roles('admin')
+  getStudentsByFilters(
+    @Query('groupId') groupId?: string,
+    @Query('courseId') courseId?: string,
+  ) {
+    return this.enrollmentsService.getStudentsByFilters(
+      groupId ? Number(groupId) : undefined,
+      courseId ? Number(courseId) : undefined,
+    );
+  }
+
   @Get('by-user')
   @Roles('admin', 'profesor')
   findByUser(@Query('userId') userId: string, @Req() req: RequestWithUser) {
@@ -68,6 +80,16 @@ export class EnrollmentsController {
   @Roles('admin', 'profesor')
   findByGroup(@Query('groupId') groupId: string, @Req() req: RequestWithUser) {
     return this.enrollmentsService.findByGroup(Number(groupId), req.user);
+  }
+
+  @Get('my-students')
+  @Roles('profesor')
+  getMyStudents(
+    @Req() req: RequestWithUser,
+    @Query('groupId') groupId?: string,
+    @Query('courseId') courseId?: string,
+  ) {
+    return this.enrollmentsService.getMyStudents(req.user.sub, groupId ? Number(groupId) : undefined, courseId ? Number(courseId) : undefined);
   }
 
   @Post()

@@ -26,7 +26,7 @@ describe('ReportsController', () => {
     jest.clearAllMocks();
   });
 
-  describe('getRetention', () => {
+  describe('getGroupReport', () => {
     it('should return group retention data', async () => {
       const mockRetention = {
         groupId: 1,
@@ -38,14 +38,14 @@ describe('ReportsController', () => {
       };
       mockReportsService.getGroupRetention.mockResolvedValue(mockRetention);
 
-      const result = await controller.getRetention(1);
+      const result = await controller.getGroupReport(1);
 
       expect(result).toEqual(mockRetention);
       expect(mockReportsService.getGroupRetention).toHaveBeenCalledWith(1);
     });
   });
 
-  describe('getGlobal', () => {
+  describe('getGlobalRetention', () => {
     it('should return global retention data', async () => {
       const mockRetention = {
         total: 100,
@@ -56,7 +56,7 @@ describe('ReportsController', () => {
       };
       mockReportsService.getGlobalRetention.mockResolvedValue(mockRetention);
 
-      const result = await controller.getGlobal();
+      const result = await controller.getGlobalRetention();
 
       expect(result).toEqual(mockRetention);
       expect(mockReportsService.getGlobalRetention).toHaveBeenCalled();
