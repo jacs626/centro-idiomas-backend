@@ -69,14 +69,22 @@ export class PaymentsController {
     return this.paymentsService.findByGroup(id);
   }
 
+  @Get('course/:id')
+  @Roles('admin', 'profesor')
+  findByCourse(@Param('id', ParseIntPipe) id: number) {
+    return this.paymentsService.findByCourse(id);
+  }
+
   @Get()
   @Roles('admin')
   findAll(
     @Query('groupId') groupId?: string,
+    @Query('courseId') courseId?: string,
     @Query('status') status?: string,
   ) {
     return this.paymentsService.findAll({
       groupId: groupId ? Number(groupId) : undefined,
+      courseId: courseId ? Number(courseId) : undefined,
       status,
     });
   }

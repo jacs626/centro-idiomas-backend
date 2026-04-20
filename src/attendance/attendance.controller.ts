@@ -48,7 +48,10 @@ export class AttendanceController {
 
   @Get('enrollment/:id')
   @Roles('admin', 'profesor', 'alumno')
-  findByEnrollment(@Param('id', ParseIntPipe) id: number, @Req() req: RequestWithUser) {
+  findByEnrollment(
+    @Param('id', ParseIntPipe) id: number,
+    @Req() req: RequestWithUser,
+  ) {
     return this.attendanceService.findByEnrollment(id, req.user);
   }
 
@@ -63,7 +66,10 @@ export class AttendanceController {
 
   @Get('group/:id')
   @Roles('admin', 'profesor')
-  findByGroup(@Param('id', ParseIntPipe) id: number, @Req() req: RequestWithUser) {
+  findByGroup(
+    @Param('id', ParseIntPipe) id: number,
+    @Req() req: RequestWithUser,
+  ) {
     return this.attendanceService.findByGroup(id, req.user);
   }
 }

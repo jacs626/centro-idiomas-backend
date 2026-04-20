@@ -54,10 +54,14 @@ describe('EnrollmentsController', () => {
 
   describe('findByUser', () => {
     it('should return enrollments by user', async () => {
-      mockEnrollmentsService.findByUserFilter.mockResolvedValue([mockEnrollment]);
+      mockEnrollmentsService.findByUserFilter.mockResolvedValue([
+        mockEnrollment,
+      ]);
       const req = { user: { sub: 1, role: 'admin' } } as any;
       expect(await controller.findByUser('1', req)).toEqual([mockEnrollment]);
-      expect(mockEnrollmentsService.findByUserFilter).toHaveBeenCalledWith({ userId: 1 });
+      expect(mockEnrollmentsService.findByUserFilter).toHaveBeenCalledWith({
+        userId: 1,
+      });
     });
   });
 
@@ -66,7 +70,10 @@ describe('EnrollmentsController', () => {
       mockEnrollmentsService.findByGroup.mockResolvedValue([mockEnrollment]);
       const req = { user: { sub: 1, role: 'admin' } } as any;
       expect(await controller.findByGroup('1', req)).toEqual([mockEnrollment]);
-      expect(mockEnrollmentsService.findByGroup).toHaveBeenCalledWith(1, req.user);
+      expect(mockEnrollmentsService.findByGroup).toHaveBeenCalledWith(
+        1,
+        req.user,
+      );
     });
   });
 

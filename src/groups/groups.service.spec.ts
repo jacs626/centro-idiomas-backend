@@ -33,8 +33,22 @@ describe('GroupsService', () => {
   describe('findAll', () => {
     it('should return all groups for admin', async () => {
       const mockGroups = [
-        { id: 1, name: 'Group A', courseId: 1, teacherId: 1, course: {}, teacher: {} },
-        { id: 2, name: 'Group B', courseId: 1, teacherId: 2, course: {}, teacher: {} },
+        {
+          id: 1,
+          name: 'Group A',
+          courseId: 1,
+          teacherId: 1,
+          course: {},
+          teacher: {},
+        },
+        {
+          id: 2,
+          name: 'Group B',
+          courseId: 1,
+          teacherId: 2,
+          course: {},
+          teacher: {},
+        },
       ];
       mockPrisma.group.findMany.mockResolvedValue(mockGroups);
 
@@ -92,8 +106,25 @@ describe('GroupsService', () => {
 
   describe('create', () => {
     it('should create a new group', async () => {
-      const dto = { name: 'Group A', courseId: 1, teacherId: 1, startDate: '2024-01-01', endDate: '2024-06-01', schedule: 'Mon 10:00' };
-      const createdGroup = { id: 1, name: 'Group A', courseId: 1, teacherId: 1, startDate: new Date('2024-01-01'), endDate: new Date('2024-06-01'), schedule: 'Mon 10:00', course: {}, teacher: {} };
+      const dto = {
+        name: 'Group A',
+        courseId: 1,
+        teacherId: 1,
+        startDate: '2024-01-01',
+        endDate: '2024-06-01',
+        schedule: 'Mon 10:00',
+      };
+      const createdGroup = {
+        id: 1,
+        name: 'Group A',
+        courseId: 1,
+        teacherId: 1,
+        startDate: new Date('2024-01-01'),
+        endDate: new Date('2024-06-01'),
+        schedule: 'Mon 10:00',
+        course: {},
+        teacher: {},
+      };
       mockPrisma.group.create.mockResolvedValue(createdGroup);
 
       const result = await service.create(dto);
@@ -117,7 +148,10 @@ describe('GroupsService', () => {
     it('should update a group', async () => {
       const mockGroup = { id: 1, name: 'Group A' };
       mockPrisma.group.findUnique.mockResolvedValue(mockGroup);
-      mockPrisma.group.update.mockResolvedValue({ ...mockGroup, name: 'Updated Group' });
+      mockPrisma.group.update.mockResolvedValue({
+        ...mockGroup,
+        name: 'Updated Group',
+      });
 
       const result = await service.update(1, { name: 'Updated Group' });
 
@@ -127,7 +161,9 @@ describe('GroupsService', () => {
     it('should throw NotFoundException for non-existent group', async () => {
       mockPrisma.group.findUnique.mockResolvedValue(null);
 
-      await expect(service.update(999, { name: 'Test' })).rejects.toThrow(NotFoundException);
+      await expect(service.update(999, { name: 'Test' })).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 

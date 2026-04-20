@@ -64,6 +64,31 @@ export class PaymentsService {
     });
   }
 
+  async findByCourse(courseId: number, status?: string) {
+    const where: any = {
+      enrollment: {
+        group: {
+          courseId,
+        },
+      },
+    };
+    if (status) {
+      where.status = status;
+    }
+    return this.prisma.payment.findMany({
+      where,
+      include: {
+        enrollment: {
+          include: {
+            user: { select: { id: true, name: true, email: true } },
+            group: { include: { course: true } },
+          },
+        },
+      },
+      orderBy: { dueDate: 'asc' },
+    });
+  }
+
   async markLatePayments() {
     const now = new Date();
 
@@ -98,7 +123,15 @@ export class PaymentsService {
     });
   }
 
-  async findAll(filters?: { groupId?: number; status?: string }) {
+  async findAll(filters?: {
+    groupId?: number;
+    courseId?: number;
+    status?: string;
+  }) {
+    if (filters?.courseId && !filters?.groupId) {
+      return this.findByCourse(filters.courseId, filters.status);
+    }
+
     const where: any = {};
     if (filters?.groupId) {
       where.enrollment = { groupId: filters.groupId };

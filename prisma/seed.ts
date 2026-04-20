@@ -68,10 +68,10 @@ async function main() {
     create: { name: 'Inglés B1', level: 'B1', description: 'Curso intermedio de inglés' },
   });
 
-  const courseGuitarra = await prisma.course.upsert({
+  const courseB2 = await prisma.course.upsert({
     where: { id: 4 },
     update: {},
-    create: { name: 'Guitarra Básica', level: 'Básico', description: 'Curso de guitarra para principiantes' },
+    create: { name: 'Inglés B2', level: 'B2', description: 'Curso intermedio-alto de inglés' },
   });
 
   const groupA1 = await prisma.group.upsert({
@@ -92,16 +92,16 @@ async function main() {
     create: { name: 'B1-Sábado', courseId: courseB1.id, teacherId: profesor2.id, startDate: new Date('2024-03-01'), endDate: new Date('2024-08-01') },
   });
 
-  const groupGuitarraA = await prisma.group.upsert({
+  const groupB2A = await prisma.group.upsert({
     where: { id: 4 },
     update: {},
-    create: { name: 'Guitarra-Lunes', courseId: courseGuitarra.id, teacherId: profesor1.id, startDate: new Date('2024-01-01'), endDate: new Date('2024-06-01') },
+    create: { name: 'B2-Lunes', courseId: courseB2.id, teacherId: profesor2.id, startDate: new Date('2024-01-01'), endDate: new Date('2024-06-01') },
   });
 
-  const groupGuitarraB = await prisma.group.upsert({
+  const groupB2B = await prisma.group.upsert({
     where: { id: 5 },
     update: {},
-    create: { name: 'Guitarra-Miécoles', courseId: courseGuitarra.id, teacherId: profesor1.id, startDate: new Date('2024-01-01'), endDate: new Date('2024-06-01') },
+    create: { name: 'B2-Miécoles', courseId: courseB2.id, teacherId: profesor2.id, startDate: new Date('2024-01-01'), endDate: new Date('2024-06-01') },
   });
 
   const enrollment1 = await prisma.enrollment.upsert({
@@ -128,6 +128,18 @@ async function main() {
     create: { userId: alumno1.id, groupId: groupA2.id, progress: 0, status: 'dropped' },
   });
 
+  const enrollment5 = await prisma.enrollment.upsert({
+    where: { id: 5 },
+    update: {},
+    create: { userId: alumno2.id, groupId: groupB2A.id, progress: 50, status: 'active' },
+  });
+
+  const enrollment6 = await prisma.enrollment.upsert({
+    where: { id: 6 },
+    update: {},
+    create: { userId: alumno3.id, groupId: groupB2B.id, progress: 20, status: 'active' },
+  });
+
   const existingAttendance = await prisma.attendance.findFirst({ where: { enrollmentId: enrollment1.id, date: new Date('2024-01-15') } });
   if (!existingAttendance) {
     await prisma.attendance.createMany({
@@ -140,6 +152,10 @@ async function main() {
         { enrollmentId: enrollment2.id, date: new Date('2024-01-29'), status: 'late' },
         { enrollmentId: enrollment3.id, date: new Date('2024-02-05'), status: 'present' },
         { enrollmentId: enrollment3.id, date: new Date('2024-02-12'), status: 'present' },
+        { enrollmentId: enrollment5.id, date: new Date('2024-01-15'), status: 'present' },
+        { enrollmentId: enrollment5.id, date: new Date('2024-01-22'), status: 'present' },
+        { enrollmentId: enrollment6.id, date: new Date('2024-01-17'), status: 'present' },
+        { enrollmentId: enrollment6.id, date: new Date('2024-01-24'), status: 'absent' },
       ],
       skipDuplicates: true,
     });
@@ -155,6 +171,9 @@ async function main() {
         { enrollmentId: enrollment2.id, amount: 50, type: 'cuota', status: 'pending', dueDate: new Date('2024-02-01'), paidAt: null },
         { enrollmentId: enrollment3.id, amount: 150, type: 'matricula', status: 'pending', dueDate: new Date('2024-02-01'), paidAt: null },
         { enrollmentId: enrollment4.id, amount: 150, type: 'matricula', status: 'paid', dueDate: new Date('2024-02-01'), paidAt: new Date('2024-02-01') },
+        { enrollmentId: enrollment5.id, amount: 150, type: 'matricula', status: 'paid', dueDate: new Date('2024-01-01'), paidAt: new Date('2024-01-01') },
+        { enrollmentId: enrollment5.id, amount: 50, type: 'cuota', status: 'paid', dueDate: new Date('2024-02-01'), paidAt: new Date('2024-02-01') },
+        { enrollmentId: enrollment6.id, amount: 150, type: 'matricula', status: 'pending', dueDate: new Date('2024-01-01'), paidAt: null },
       ],
       skipDuplicates: true,
     });

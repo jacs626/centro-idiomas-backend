@@ -119,9 +119,15 @@ export class ReportsService {
 
     const result = groups.map((group) => {
       const total = group.enrollments.length;
-      const active = group.enrollments.filter((e) => e.status === 'active').length;
-      const completed = group.enrollments.filter((e) => e.status === 'completed').length;
-      const dropped = group.enrollments.filter((e) => e.status === 'dropped').length;
+      const active = group.enrollments.filter(
+        (e) => e.status === 'active',
+      ).length;
+      const completed = group.enrollments.filter(
+        (e) => e.status === 'completed',
+      ).length;
+      const dropped = group.enrollments.filter(
+        (e) => e.status === 'dropped',
+      ).length;
       const retention = total ? ((active + completed) / total) * 100 : 0;
 
       const avgProgress =

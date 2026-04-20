@@ -30,8 +30,23 @@ describe('ReportsController', () => {
   describe('getSummary', () => {
     it('should return system summary', async () => {
       const mockSummary = {
-        enrollments: { total: 100, active: 70, completed: 20, dropped: 10, retention: 90 },
-        payments: { total: 100, paid: 70, pending: 20, late: 10, paidPercent: 70, pendingPercent: 20, latePercent: 10, totalIncome: 10000 },
+        enrollments: {
+          total: 100,
+          active: 70,
+          completed: 20,
+          dropped: 10,
+          retention: 90,
+        },
+        payments: {
+          total: 100,
+          paid: 70,
+          pending: 20,
+          late: 10,
+          paidPercent: 70,
+          pendingPercent: 20,
+          latePercent: 10,
+          totalIncome: 10000,
+        },
       };
       mockReportsService.getSummary.mockResolvedValue(mockSummary);
 
@@ -45,7 +60,17 @@ describe('ReportsController', () => {
   describe('getGroupsSummary', () => {
     it('should return summary for all groups', async () => {
       const mockGroupsSummary = [
-        { groupId: 1, groupName: 'Group A', courseName: 'English', total: 10, active: 7, completed: 2, dropped: 1, retention: 90, avgProgress: 75 },
+        {
+          groupId: 1,
+          groupName: 'Group A',
+          courseName: 'English',
+          total: 10,
+          active: 7,
+          completed: 2,
+          dropped: 1,
+          retention: 90,
+          avgProgress: 75,
+        },
       ];
       mockReportsService.getGroupsSummary.mockResolvedValue(mockGroupsSummary);
 
@@ -62,10 +87,32 @@ describe('ReportsController', () => {
         groupId: 1,
         groupName: 'Group A',
         courseName: 'English',
-        enrollments: { total: 10, active: 7, completed: 2, dropped: 1, retention: 90 },
+        enrollments: {
+          total: 10,
+          active: 7,
+          completed: 2,
+          dropped: 1,
+          retention: 90,
+        },
         avgProgress: 75,
-        attendance: { present: 80, absent: 15, late: 5, presentPercent: 80, absentPercent: 15, latePercent: 5 },
-        payments: { total: 1000, paid: 700, pending: 200, late: 100, paidPercent: 70, pendingPercent: 20, latePercent: 10, totalIncome: 1000 },
+        attendance: {
+          present: 80,
+          absent: 15,
+          late: 5,
+          presentPercent: 80,
+          absentPercent: 15,
+          latePercent: 5,
+        },
+        payments: {
+          total: 1000,
+          paid: 700,
+          pending: 200,
+          late: 100,
+          paidPercent: 70,
+          pendingPercent: 20,
+          latePercent: 10,
+          totalIncome: 1000,
+        },
       };
       mockReportsService.getGroupReports.mockResolvedValue(mockGroupReport);
 
@@ -79,15 +126,39 @@ describe('ReportsController', () => {
   describe('getCourseReport', () => {
     it('should return summary for all groups in a course', async () => {
       const mockCourseReport = [
-        { groupId: 1, groupName: 'Group A', courseName: 'English', total: 10, active: 7, completed: 2, dropped: 1, retention: 90, avgProgress: 75 },
-        { groupId: 2, groupName: 'Group B', courseName: 'English', total: 8, active: 6, completed: 1, dropped: 1, retention: 87.5, avgProgress: 70 },
+        {
+          groupId: 1,
+          groupName: 'Group A',
+          courseName: 'English',
+          total: 10,
+          active: 7,
+          completed: 2,
+          dropped: 1,
+          retention: 90,
+          avgProgress: 75,
+        },
+        {
+          groupId: 2,
+          groupName: 'Group B',
+          courseName: 'English',
+          total: 8,
+          active: 6,
+          completed: 1,
+          dropped: 1,
+          retention: 87.5,
+          avgProgress: 70,
+        },
       ];
-      mockReportsService.getGroupsSummaryByCourse.mockResolvedValue(mockCourseReport);
+      mockReportsService.getGroupsSummaryByCourse.mockResolvedValue(
+        mockCourseReport,
+      );
 
       const result = await controller.getCourseReport(1);
 
       expect(result).toEqual(mockCourseReport);
-      expect(mockReportsService.getGroupsSummaryByCourse).toHaveBeenCalledWith(1);
+      expect(mockReportsService.getGroupsSummaryByCourse).toHaveBeenCalledWith(
+        1,
+      );
     });
   });
 });

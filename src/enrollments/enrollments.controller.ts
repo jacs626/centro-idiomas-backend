@@ -47,9 +47,10 @@ export class EnrollmentsController {
   @Get('by-user')
   @Roles('admin', 'profesor')
   findByUser(@Query('userId') userId: string, @Req() req: RequestWithUser) {
-    const where = req.user.role === 'profesor' 
-      ? { userId: Number(userId), group: { teacherId: req.user.sub } }
-      : { userId: Number(userId) };
+    const where =
+      req.user.role === 'profesor'
+        ? { userId: Number(userId), group: { teacherId: req.user.sub } }
+        : { userId: Number(userId) };
     return this.enrollmentsService.findByUserFilter(where);
   }
 
@@ -89,7 +90,11 @@ export class EnrollmentsController {
     @Query('groupId') groupId?: string,
     @Query('courseId') courseId?: string,
   ) {
-    return this.enrollmentsService.getMyStudents(req.user.sub, groupId ? Number(groupId) : undefined, courseId ? Number(courseId) : undefined);
+    return this.enrollmentsService.getMyStudents(
+      req.user.sub,
+      groupId ? Number(groupId) : undefined,
+      courseId ? Number(courseId) : undefined,
+    );
   }
 
   @Post()

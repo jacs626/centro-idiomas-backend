@@ -6,7 +6,14 @@ export class NotificationsService {
   constructor(private prisma: PrismaService) {}
 
   async getNotifications(userId: number, role: string) {
-    const notifications: Array<{ id: string; type: string; title: string; message: string; createdAt: string; read: boolean }> = [];
+    const notifications: Array<{
+      id: string;
+      type: string;
+      title: string;
+      message: string;
+      createdAt: string;
+      read: boolean;
+    }> = [];
 
     if (role === 'alumno') {
       const enrollments = await this.prisma.enrollment.findMany({
@@ -19,7 +26,7 @@ export class NotificationsService {
           where: { enrollmentId: enrollment.id },
         });
 
-        const latePayments = payments.filter(p => p.status === 'late');
+        const latePayments = payments.filter((p) => p.status === 'late');
         if (latePayments.length > 0) {
           notifications.push({
             id: `payment-${enrollment.id}`,
@@ -74,7 +81,10 @@ export class NotificationsService {
         where: { enrollment: { userId }, status: 'pending' },
       });
       if (pendingPayments.length > 0) {
-        const totalPending = pendingPayments.reduce((sum, p) => sum + Number(p.amount), 0);
+        const totalPending = pendingPayments.reduce(
+          (sum, p) => sum + Number(p.amount),
+          0,
+        );
         notifications.push({
           id: 'pending-payments',
           type: 'payment',
@@ -125,7 +135,7 @@ export class NotificationsService {
           where: { group: { teacherId: userId }, status: 'active' },
           include: { user: true },
         });
-        const lowProgress = students.filter(s => s.progress < 50);
+        const lowProgress = students.filter((s) => s.progress < 50);
         if (lowProgress.length > 0) {
           notifications.push({
             id: 'profesor-low-progress',

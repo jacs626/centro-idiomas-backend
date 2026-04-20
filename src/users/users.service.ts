@@ -70,7 +70,15 @@ export class UsersService {
   async findByEmail(email: string) {
     return this.prisma.user.findFirst({
       where: { email, deletedAt: null },
-      select: { id: true, email: true, name: true, role: true, password: true, createdAt: true, deletedAt: true },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        password: true,
+        createdAt: true,
+        deletedAt: true,
+      },
     });
   }
 

@@ -73,10 +73,11 @@ export class CertificatesService {
     return this.generatePdf(certificate.enrollment, res);
   }
 
-async findAll(user: any) {
-    const where = user.role === 'profesor'
-      ? { enrollment: { group: { teacherId: user.sub } } }
-      : {};
+  async findAll(user: any) {
+    const where =
+      user.role === 'profesor'
+        ? { enrollment: { group: { teacherId: user.sub } } }
+        : {};
     return this.prisma.certificate.findMany({
       where,
       include: {
@@ -96,7 +97,9 @@ async findAll(user: any) {
 
   async findByGroup(groupId: number, user: any) {
     if (user.role === 'profesor') {
-      const group = await this.prisma.group.findUnique({ where: { id: groupId } });
+      const group = await this.prisma.group.findUnique({
+        where: { id: groupId },
+      });
       if (!group || group.teacherId !== user.sub) {
         throw new ForbiddenException('No tienes acceso a este grupo');
       }

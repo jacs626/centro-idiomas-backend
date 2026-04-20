@@ -8,9 +8,8 @@ export class EnrollmentsService {
   constructor(private prisma: PrismaService) {}
 
   async findAll(user?: { sub: number; role: string }) {
-    const where = user?.role === 'profesor' 
-      ? { group: { teacherId: user.sub } } 
-      : {};
+    const where =
+      user?.role === 'profesor' ? { group: { teacherId: user.sub } } : {};
     return this.prisma.enrollment.findMany({
       where,
       include: {

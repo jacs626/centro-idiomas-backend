@@ -28,7 +28,7 @@ describe('GroupsController', () => {
     },
   };
 
-const mockGroupsService = {
+  const mockGroupsService = {
     findAll: jest.fn(),
     findByCourseWithAccess: jest.fn(),
     create: jest.fn(),
@@ -65,7 +65,10 @@ const mockGroupsService = {
       mockGroupsService.findByCourseWithAccess.mockResolvedValue([mockGroup]);
       const req = { user: { sub: 1, role: 'admin' } } as any;
       expect(await controller.findByCourse('1', req)).toEqual([mockGroup]);
-      expect(mockGroupsService.findByCourseWithAccess).toHaveBeenCalledWith(1, req.user);
+      expect(mockGroupsService.findByCourseWithAccess).toHaveBeenCalledWith(
+        1,
+        req.user,
+      );
     });
   });
 

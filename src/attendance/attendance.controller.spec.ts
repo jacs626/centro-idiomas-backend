@@ -89,7 +89,10 @@ describe('AttendanceController', () => {
       const result = await controller.findByEnrollment(1, req);
 
       expect(result).toEqual([mockAttendance]);
-      expect(mockAttendanceService.findByEnrollment).toHaveBeenCalledWith(1, req.user);
+      expect(mockAttendanceService.findByEnrollment).toHaveBeenCalledWith(
+        1,
+        req.user,
+      );
     });
   });
 
@@ -101,7 +104,10 @@ describe('AttendanceController', () => {
       const result = await controller.findByGroup(1, req);
 
       expect(result).toEqual([mockAttendance]);
-      expect(mockAttendanceService.findByGroup).toHaveBeenCalledWith(1, req.user);
+      expect(mockAttendanceService.findByGroup).toHaveBeenCalledWith(
+        1,
+        req.user,
+      );
     });
   });
 });

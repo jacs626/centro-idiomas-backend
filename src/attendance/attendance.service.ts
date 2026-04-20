@@ -40,7 +40,10 @@ export class AttendanceService {
     });
   }
 
-  async findByEnrollment(enrollmentId: number, user?: { sub: number; role: string }) {
+  async findByEnrollment(
+    enrollmentId: number,
+    user?: { sub: number; role: string },
+  ) {
     const enrollment = await this.prisma.enrollment.findUnique({
       where: { id: enrollmentId },
       include: { group: true },
