@@ -27,8 +27,8 @@ export class AttendanceController {
 
   @Post()
   @Roles('admin', 'profesor')
-  create(@Body() dto: CreateAttendanceDto) {
-    return this.attendanceService.create(dto);
+  create(@Body() dto: CreateAttendanceDto, @Req() req: RequestWithUser) {
+    return this.attendanceService.create(dto, req.user);
   }
 
   @Patch(':id')

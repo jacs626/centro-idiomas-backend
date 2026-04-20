@@ -11,13 +11,18 @@ import { PrismaService } from '../prisma/prisma.service';
 export class AttendanceService {
   constructor(private prisma: PrismaService) {}
 
-  async create(dto: CreateAttendanceDto) {
+  async create(dto: CreateAttendanceDto, user?: { sub: number; role: string }) {
     const enrollment = await this.prisma.enrollment.findUnique({
       where: { id: dto.enrollmentId },
+      include: { group: true },
     });
 
     if (!enrollment) {
       throw new NotFoundException('Enrollment no existe');
+    }
+
+    if (user?.role === 'profesor' && enrollment.group.teacherId !== user.sub) {
+      throw new BadRequestException('No tienes permiso para registrar asistencia en este grupo');
     }
 
     const existing = await this.prisma.attendance.findFirst({
